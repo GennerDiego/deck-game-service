@@ -1,6 +1,7 @@
 package com.cardgame.service;
 
 import com.cardgame.exception.*;
+import com.cardgame.model.dto.PlayerScoreResponse;
 import com.cardgame.model.entity.Card;
 import com.cardgame.model.entity.Deck;
 import com.cardgame.model.entity.Game;
@@ -54,7 +55,7 @@ public class GameService {
   public void shuffleGameDeck(String gameId) {
     Game game = findById(gameId);
 
-    // Shuffle em deck vazio não faz nada (não lança exceção)
+    // Shuffle on empty deck does nothing (doesn't throw exception)
     if (!game.getGameDeck().isEmpty()) {
       shuffleUtil.shuffle(game.getGameDeck());
       gameRepository.save(game);
@@ -99,7 +100,7 @@ public class GameService {
       throw new PlayerNotFoundException(playerId, gameId);
     }
 
-    // Se deck está vazio, retorna lista vazia (não lança exceção)
+    // If deck is empty, return empty list (doesn't throw exception)
     int cardsToDeal = Math.min(count, game.getGameDeck().size());
     List<Card> dealtCards = new ArrayList<>();
     Player player = game.getPlayer(playerId);
@@ -131,10 +132,10 @@ public class GameService {
     return game.getPlayer(playerId).getCards();
   }
 
-  public List<com.cardgame.model.dto.PlayerScoreResponse> getPlayerScores(String gameId) {
+  public List<PlayerScoreResponse> getPlayerScores(String gameId) {
     Game game = findById(gameId);
 
-    return game.getPlayers().values().stream()
+    return game.getPlayers().stream()
         .map(
             player ->
                 com.cardgame.model.dto.PlayerScoreResponse.of(
@@ -178,9 +179,5 @@ public class GameService {
         .collect(
             Collectors.toMap(
                 Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
-  }
-
-  public Game getGameDetails(String gameId) {
-    return findById(gameId);
   }
 }

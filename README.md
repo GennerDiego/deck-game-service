@@ -126,7 +126,7 @@ POST /api/v1/games
 DELETE /api/v1/games/{gameId}
 
 # Shuffle game deck
-POST /api/v1/games/{gameId}/deck/shuffle
+POST /api/v1/games/{gameId}/decks/shuffle
 ```
 
 ### Deck Management
@@ -164,10 +164,10 @@ GET /api/v1/games/{gameId}/players/scores
 ### Game Deck Queries
 ```bash
 # Count undealt cards by suit
-GET /api/v1/games/{gameId}/deck/suits-count
+GET /api/v1/games/{gameId}/decks/suits-count
 
 # Count each remaining card
-GET /api/v1/games/{gameId}/deck/cards-count
+GET /api/v1/games/{gameId}/decks/cards-count
 ```
 
 ## 🎮 Usage Example
@@ -193,7 +193,7 @@ curl -X POST http://localhost:8080/api/v1/games/game-123/players \
 # Response: { "playerId": "player-789" }
 
 # 5. Shuffle the deck
-curl -X POST http://localhost:8080/api/v1/games/game-123/deck/shuffle
+curl -X POST http://localhost:8080/api/v1/games/game-123/decks/shuffle
 
 # 6. Deal 5 cards to Alice
 curl -X POST "http://localhost:8080/api/v1/games/game-123/players/player-789/deal?count=5"

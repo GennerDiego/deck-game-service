@@ -2,6 +2,7 @@ package com.cardgame.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -11,23 +12,18 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.TimeToLive;
 
 @Data
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(value = Include.NON_NULL)
-@RedisHash("decks")
+@JsonPropertyOrder({"id", "cards", "createdAt"})
 public class Deck implements Serializable {
 
   private static final int STANDARD_DECK_SIZE = 52;
 
-  @Id private String id;
-
-  @TimeToLive @Builder.Default private Long ttl = 86400L; // 24 hours in seconds
+  private String id;
 
   @Builder.Default private List<Card> cards = new ArrayList<>();
 

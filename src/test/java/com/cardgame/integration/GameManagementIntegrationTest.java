@@ -22,7 +22,7 @@ class GameManagementIntegrationTest extends BaseIntegrationTest {
     assertThat(game.getId()).isNotNull().matches("[0-9a-fA-F-]{36}"); // UUID format
     assertThat(game.getTotalCardsInDeck()).isEqualTo(0);
     assertThat(game.getCardsRemaining()).isEqualTo(0);
-    assertThat(game.getPlayersList()).isEmpty();
+    assertThat(game.getPlayers()).isEmpty();
   }
 
   @Test

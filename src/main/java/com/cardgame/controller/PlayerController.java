@@ -4,7 +4,7 @@ import com.cardgame.model.dto.AddPlayerRequest;
 import com.cardgame.model.entity.Player;
 import com.cardgame.service.GameService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -20,7 +20,7 @@ public class PlayerController {
   @PostMapping
   public ResponseEntity<Void> addPlayerToGame(
       @PathVariable String gameId, @Valid @RequestBody AddPlayerRequest request) {
-    Player player = Player.createNew(request.getName(), gameId);
+    Player player = Player.createNew(request.getName());
     gameService.addPlayer(gameId, player);
     return ResponseEntity.noContent().build();
   }
@@ -36,7 +36,7 @@ public class PlayerController {
   public ResponseEntity<java.util.List<com.cardgame.model.entity.Card>> dealCardsToPlayer(
       @PathVariable String gameId,
       @PathVariable String playerId,
-      @RequestParam(defaultValue = "1") @Min(1) int count) {
+      @RequestParam(defaultValue = "1") @Positive(message = "Count must be positive") int count) {
     java.util.List<com.cardgame.model.entity.Card> dealtCards =
         gameService.dealCards(gameId, playerId, count);
     return ResponseEntity.ok(dealtCards);

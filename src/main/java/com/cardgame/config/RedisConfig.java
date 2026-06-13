@@ -4,28 +4,22 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-@EnableRedisRepositories(basePackages = "com.cardgame.repository")
 public class RedisConfig {
 
   @Bean
-  public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-    RedisTemplate<String, Object> template = new RedisTemplate<>();
+  public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
+    RedisTemplate<String, String> template = new RedisTemplate<>();
     template.setConnectionFactory(connectionFactory);
 
-    // Use String serializer for keys
+    // Use String serializer for both keys and values (values will be JSON strings)
     StringRedisSerializer stringSerializer = new StringRedisSerializer();
     template.setKeySerializer(stringSerializer);
+    template.setValueSerializer(stringSerializer);
     template.setHashKeySerializer(stringSerializer);
-
-    // Use JSON serializer for values
-    GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
-    template.setValueSerializer(jsonSerializer);
-    template.setHashValueSerializer(jsonSerializer);
+    template.setHashValueSerializer(stringSerializer);
 
     template.afterPropertiesSet();
     return template;

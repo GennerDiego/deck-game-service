@@ -1,6 +1,7 @@
 package com.cardgame.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -89,6 +90,22 @@ public class GlobalExceptionHandler {
             .map(error -> error.getField() + ": " + error.getDefaultMessage())
             .reduce((a, b) -> a + ", " + b)
             .orElse("Validation failed");
+
+    ErrorResponse error =
+        ErrorResponse.of(
+            HttpStatus.BAD_REQUEST.value(), "Bad Request", message, request.getRequestURI());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+  }
+
+  @ExceptionHandler(ConstraintViolationException.class)
+  public ResponseEntity<ErrorResponse> handleConstraintViolation(
+      ConstraintViolationException ex, HttpServletRequest request) {
+    log.warn("Constraint violation: {}", ex.getMessage());
+    String message =
+        ex.getConstraintViolations().stream()
+            .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("Constraint violation");
 
     ErrorResponse error =
         ErrorResponse.of(

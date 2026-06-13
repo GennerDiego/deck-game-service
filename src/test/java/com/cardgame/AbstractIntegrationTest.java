@@ -1,29 +1,30 @@
 package com.cardgame;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Testcontainers
+@ActiveProfiles("test")
 public abstract class AbstractIntegrationTest {
 
   @LocalServerPort protected int port;
 
   @Autowired protected TestRestTemplate restTemplate;
 
+  @Autowired protected RedisTemplate<String, String> redisTemplate;
+
   protected String baseUrl;
 
-  @Container
-  private static final GenericContainer<?> redis =
-      new GenericContainer<>("redis:7.2-alpine").withExposedPorts(6379);
+  private static final GenericContainer<?> redis = RedisTestContainer.getInstance();
 
   @DynamicPropertySource
   static void redisProperties(DynamicPropertyRegistry registry) {
@@ -34,5 +35,16 @@ public abstract class AbstractIntegrationTest {
   @BeforeEach
   void setUp() {
     baseUrl = "http://localhost:" + port + "/api/v1";
+    System.out.println("🔗 Base URL: " + baseUrl);
+    System.out.println(
+        "🐳 Redis Testcontainer: " + redis.getHost() + ":" + redis.getFirstMappedPort());
+  }
+
+  @AfterEach
+  void tearDown() {
+    // Clean Redis after each test to avoid interference
+    if (redisTemplate != null) {
+      redisTemplate.getConnectionFactory().getConnection().serverCommands().flushDb();
+    }
   }
 }

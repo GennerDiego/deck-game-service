@@ -102,37 +102,63 @@ src/test/java/com/cardgame/
 - Docker rodando (para Testcontainers)
 - Java 17+
 
-### Executar todos os testes
+### ⭐ Executar Integration Tests (Recomendado)
+```bash
+# Task customizada - apenas integration tests
+./gradlew integrationTest
+
+# Com logs detalhados
+./gradlew integrationTest --info
+
+# Com stack trace em caso de erro
+./gradlew integrationTest --stacktrace
+```
+
+**Benefícios da task `integrationTest`:**
+- Executa apenas testes de integração (package `integration.*`)
+- Configuração otimizada (heap, GC, parallel forks)
+- Output formatado e informativo
+- Mais rápido que rodar todos os testes
+
+### Executar Todos os Testes (Unit + Integration)
 ```bash
 ./gradlew test
 ```
 
-### Executar apenas Integration Tests
+### Executar Testes Específicos
 ```bash
-./gradlew test --tests "*IntegrationTest"
+# Por arquivo
+./gradlew test --tests "GameManagementIntegrationTest"
+./gradlew test --tests "DealCardsIntegrationTest"
+./gradlew test --tests "RealisticGameFlowIntegrationTest"
+
+# Por método
+./gradlew test --tests "DealCardsIntegrationTest.dealCards_afterShuffle*"
+./gradlew test --tests "RealisticGameFlowIntegrationTest.pokerGameFlow*"
+
+# Por package
+./gradlew test --tests "com.cardgame.integration.*"
 ```
 
-### Executar teste específico
-```bash
-# Todos os testes de integração
-./gradlew test --tests "GameIntegrationTest"
-
-# Teste específico
-./gradlew test --tests "GameIntegrationTest.completeGameFlow_shouldWorkEndToEnd"
-
-# Somente testes de deck business rules
-./gradlew test --tests "GameIntegrationTest.*Deck*"
-```
-
-### Com logs detalhados
-```bash
-./gradlew test --info
-```
-
-### Com coverage report
+### Com Coverage Report
 ```bash
 ./gradlew test jacocoTestReport
 open build/reports/jacoco/test/html/index.html
+```
+
+### Comandos Úteis
+```bash
+# Listar todas as tasks de verificação
+./gradlew tasks --group=verification
+
+# Rodar pre-commit checks (spotless + tests)
+./gradlew preCommit
+
+# Apenas formatar código
+./gradlew spotlessApply
+
+# Verificar formatação sem aplicar
+./gradlew spotlessCheck
 ```
 
 ## 📊 Cenários de Teste Detalhados

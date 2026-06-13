@@ -1,44 +1,48 @@
 package com.cardgame.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.TimeToLive;
 
 @Data
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(value = Include.NON_NULL)
-@RedisHash("games")
+@JsonPropertyOrder({
+  "id",
+  "totalCardsInDeck",
+  "cardsRemaining",
+  "discardedCards",
+  "totalDecksAdded",
+  "createdAt",
+  "deck",
+  "players"
+})
 public class Game implements Serializable {
 
-  @Id
-  @JsonProperty("gameId")
+  @JsonProperty("id")
   private String id;
-
-  @TimeToLive @JsonIgnore @Builder.Default private Long ttl = 86400L; // 24 hours in seconds
 
   @JsonProperty("deck")
   @Builder.Default
   private List<Card> gameDeck = new ArrayList<>();
 
-  @JsonIgnore @Builder.Default private Map<String, Player> players = new HashMap<>();
-
-  @JsonProperty("discardedCards")
+  @JsonProperty("players")
   @Builder.Default
-  private List<Card> discardedCards = new ArrayList<>();
+  private List<Player> players = new ArrayList<>();
+
+  //  @JsonProperty("discardedCards")
+  //  @Builder.Default
+  //  private List<Card> discardedCards = new ArrayList<>();
 
   @JsonProperty("totalDecksAdded")
   @Builder.Default
@@ -56,24 +60,24 @@ public class Game implements Serializable {
   }
 
   public void addPlayer(Player player) {
-    this.players.put(player.getId(), player);
+    this.players.add(player);
   }
 
   public void removePlayer(String playerId) {
-    Player player = this.players.get(playerId);
+    Player player = getPlayer(playerId);
     if (player != null) {
-      // Move cartas do player para discardedCards
-      this.discardedCards.addAll(player.getCards());
+      // Move player's cards to discarded pile
+      //      this.discardedCards.addAll(player.getCards());
+      this.players.remove(player);
     }
-    this.players.remove(playerId);
   }
 
   public boolean hasPlayer(String playerId) {
-    return this.players.containsKey(playerId);
+    return this.players.stream().anyMatch(p -> p.getId().equals(playerId));
   }
 
   public Player getPlayer(String playerId) {
-    return this.players.get(playerId);
+    return this.players.stream().filter(p -> p.getId().equals(playerId)).findFirst().orElse(null);
   }
 
   // Computed fields for JSON output
@@ -85,12 +89,5 @@ public class Game implements Serializable {
   @JsonProperty("cardsRemaining")
   public int getCardsRemaining() {
     return gameDeck.size();
-  }
-
-  @JsonProperty("players")
-  public List<Player> getPlayersList() {
-    return players.values().stream()
-        .sorted((a, b) -> Integer.compare(b.getTotalValue(), a.getTotalValue()))
-        .collect(Collectors.toList());
   }
 }

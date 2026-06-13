@@ -1,16 +1,24 @@
 package com.cardgame.repository;
 
 import com.cardgame.model.entity.Game;
-import org.springframework.data.repository.CrudRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface GameRepository extends CrudRepository<Game, String> {
-  // CRUD methods are automatically provided:
-  // - save(Game game)
-  // - findById(String id)
-  // - findAll()
-  // - deleteById(String id)
-  // - existsById(String id)
-  // - count()
+public class GameRepository extends JsonRedisRepository<Game> {
+
+  public GameRepository(RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
+    super(redisTemplate, objectMapper, Game.class);
+  }
+
+  @Override
+  protected String getKeyPrefix() {
+    return "game:";
+  }
+
+  @Override
+  protected String getEntityId(Game entity) {
+    return entity.getId();
+  }
 }

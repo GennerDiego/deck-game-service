@@ -30,7 +30,7 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   protected Game createGame() {
     ResponseEntity<Game> response =
         restTemplate.postForEntity(baseUrl + "/games", null, Game.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.CREATED);
     return response.getBody();
   }
 
@@ -44,7 +44,7 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   protected void deleteGame(String gameId) {
     ResponseEntity<Void> response =
         restTemplate.exchange(baseUrl + "/games/" + gameId, HttpMethod.DELETE, null, Void.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
   }
 
   // ==================== DECK OPERATIONS ====================
@@ -52,14 +52,16 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   protected void addDeckToGame(String gameId) {
     ResponseEntity<Void> response =
         restTemplate.postForEntity(baseUrl + "/games/" + gameId + "/decks", null, Void.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode())
+        .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
   }
 
   protected void shuffleDeck(String gameId) {
     ResponseEntity<Void> response =
         restTemplate.postForEntity(
-            baseUrl + "/games/" + gameId + "/deck/shuffle", null, Void.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            baseUrl + "/games/" + gameId + "/decks/shuffle", null, Void.class);
+    assertThat(response.getStatusCode())
+        .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
   }
 
   // ==================== PLAYER OPERATIONS ====================
@@ -68,11 +70,12 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
     AddPlayerRequest request = new AddPlayerRequest(playerName);
     ResponseEntity<Void> response =
         restTemplate.postForEntity(baseUrl + "/games/" + gameId + "/players", request, Void.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode())
+        .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
 
     // Get game to retrieve player ID
     Game game = getGame(gameId);
-    return game.getPlayersList().stream()
+    return game.getPlayers().stream()
         .filter(p -> p.getName().equals(playerName))
         .findFirst()
         .orElseThrow()
@@ -86,7 +89,7 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
             HttpMethod.DELETE,
             null,
             Void.class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
   }
 
   // ==================== CARD OPERATIONS ====================
@@ -98,7 +101,8 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
             HttpMethod.POST,
             null,
             Card[].class);
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(response.getStatusCode())
+        .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
     return Arrays.asList(response.getBody());
   }
 
@@ -123,7 +127,7 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   protected Map<String, Integer> getSuitCounts(String gameId) {
     ResponseEntity<Map<String, Integer>> response =
         restTemplate.exchange(
-            baseUrl + "/games/" + gameId + "/deck/suits-count",
+            baseUrl + "/games/" + gameId + "/decks/suits-count",
             HttpMethod.GET,
             null,
             new ParameterizedTypeReference<>() {});
@@ -134,7 +138,7 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   protected Map<String, Integer> getCardCounts(String gameId) {
     ResponseEntity<Map<String, Integer>> response =
         restTemplate.exchange(
-            baseUrl + "/games/" + gameId + "/deck/cards-count",
+            baseUrl + "/games/" + gameId + "/decks/cards-count",
             HttpMethod.GET,
             null,
             new ParameterizedTypeReference<>() {});

@@ -46,10 +46,15 @@ dependencies {
 
     // Testing
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.testcontainers:testcontainers:1.19.8")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.8")
+    testImplementation("org.testcontainers:testcontainers:1.21.4")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.4")
     testImplementation("org.mockito:mockito-core")
     testImplementation("org.mockito:mockito-junit-jupiter")
+}
+
+// Testcontainers reuse configuration
+tasks.withType<Test> {
+    systemProperty("testcontainers.reuse.enable", "true")
 }
 
 tasks.withType<Test> {
@@ -70,4 +75,42 @@ spotless {
 tasks.register("preCommit") {
     dependsOn("spotlessApply", "test")
     description = "Run all pre-commit checks (spotless + tests)"
+}
+
+tasks.register("integrationTest", Test::class) {
+    description = "Run integration tests only"
+    group = "verification"
+
+    useJUnitPlatform()
+
+    // Performance tuning
+    maxHeapSize = "1024m"
+    jvmArgs("-XX:+UseG1GC", "-XX:MaxGCPauseMillis=100")
+
+    // Test execution settings - disable parallelization to avoid Redis connection conflicts
+    maxParallelForks = 1
+
+    // Filter by package/class name
+    filter {
+        includeTestsMatching("com.cardgame.integration.*")
+    }
+
+    // Show detailed test output
+    testLogging {
+        events("passed", "skipped", "failed", "standardOut", "standardError")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
+
+    // Ensure Docker is available for Testcontainers
+    doFirst {
+        println("🐳 Starting integration tests with Testcontainers...")
+        println("📦 Max parallel forks: $maxParallelForks")
+    }
+
+    doLast {
+        println("✅ Integration tests completed!")
+    }
 }

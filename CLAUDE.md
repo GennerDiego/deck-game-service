@@ -171,7 +171,7 @@ Before every commit, ensure:
 
 ### 3. Git Commit Conventions
 
-**Format:** `tipo(escopo): descrição`
+**Format:** `type(scope): description`
 
 **Types:**
 - `feat`: New feature
@@ -266,17 +266,26 @@ docker-compose up -d
 
 ### Testing
 ```bash
-# Run all tests
+# Run all tests (unit + integration)
 ./gradlew test
 
-# Run specific test
-./gradlew test --tests GameServiceTest
+# Run only integration tests (recommended for E2E validation)
+./gradlew integrationTest
+
+# Run integration tests with detailed logs
+./gradlew integrationTest --info
+
+# Run specific test file
+./gradlew test --tests GameManagementIntegrationTest
+./gradlew test --tests DealCardsIntegrationTest
+./gradlew test --tests RealisticGameFlowIntegrationTest
 
 # Run specific test method
-./gradlew test --tests GameServiceTest.createGame_whenValidInput_returnsGameId
+./gradlew test --tests "DealCardsIntegrationTest.dealCards_afterShuffle*"
 
 # Run tests with coverage
 ./gradlew test jacocoTestReport
+# open build/reports/jacoco/test/html/index.html
 ```
 
 ### Code Formatting
