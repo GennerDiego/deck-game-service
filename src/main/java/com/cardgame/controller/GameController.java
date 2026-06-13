@@ -2,16 +2,17 @@ package com.cardgame.controller;
 
 import com.cardgame.model.entity.Game;
 import com.cardgame.service.GameService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/games")
+@RequiredArgsConstructor
 public class GameController {
 
-  @Autowired private GameService gameService;
+  private final GameService gameService;
 
   @PostMapping
   public ResponseEntity<Game> createGame() {
