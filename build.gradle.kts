@@ -52,11 +52,6 @@ dependencies {
     testImplementation("org.mockito:mockito-junit-jupiter")
 }
 
-// Testcontainers reuse configuration
-tasks.withType<Test> {
-    systemProperty("testcontainers.reuse.enable", "true")
-}
-
 tasks.withType<Test> {
     useJUnitPlatform()
 }
