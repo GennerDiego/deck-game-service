@@ -43,10 +43,11 @@ com.cardgame
 - Face values: Ace=1, 2-10=numeric value, Jack=11, Queen=12, King=13
 
 ### Game Rules
-- Decks can be added multiple times to a game deck (shoe)
-- Once a deck is added to a game, it CANNOT be removed
+- **Multiple decks can be added** to create a "game deck" (shoe): 1 deck = 52 cards, 2 decks = 104 cards, etc.
+- **Decks CANNOT be removed** once added to the game
 - Dealt cards are removed from the game deck and associated with the player
-- If requesting more cards than available, return only available cards
+- If requesting more cards than available in the shoe, deal only available cards
+- Total cards in shoe = sum of all decks added (e.g., 3 decks = 156 cards)
 
 ### Shuffling Requirements
 - **MUST implement shuffle algorithm manually** (e.g., Fisher-Yates)
