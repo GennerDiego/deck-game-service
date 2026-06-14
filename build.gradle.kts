@@ -55,7 +55,8 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    finalizedBy(tasks.jacocoTestReport)
+    // Note: finalizedBy(jacocoTestReport) is configured per-task to avoid
+    // integrationTest triggering unitTest via jacoco dependency
 }
 
 tasks.jacocoTestReport {
@@ -142,6 +143,7 @@ tasks.register("unitTest", Test::class) {
         showStackTraces = true
     }
 
+    // Only unitTest should trigger jacocoTestReport (not integrationTest)
     finalizedBy(tasks.jacocoTestReport)
 }
 
