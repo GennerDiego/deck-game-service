@@ -56,8 +56,8 @@ class PlayerServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw DuplicatePlayerException when player already exists")
-    void addPlayer_whenPlayerAlreadyExists_throwsException() {
+    @DisplayName("Should throw DuplicatePlayerException when player ID already exists")
+    void addPlayer_whenPlayerIdAlreadyExists_throwsException() {
       // Given
       String gameId = "game-123";
       Player player = Player.createNew("Alice");
@@ -71,6 +71,53 @@ class PlayerServiceTest {
           .hasMessageContaining(player.getId())
           .hasMessageContaining(gameId);
 
+      verify(gameRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Should throw DuplicatePlayerException when player name already exists")
+    void addPlayer_whenPlayerNameAlreadyExists_throwsException() {
+      // Given
+      String gameId = "game-123";
+      Player existingPlayer = Player.createNew("Alice");
+      Player newPlayerSameName = Player.createNew("Alice"); // Different ID, same name
+
+      Game game = Game.createNew();
+      game.addPlayer(existingPlayer);
+      when(gameService.findById(gameId)).thenReturn(game);
+
+      // When/Then
+      assertThatThrownBy(() -> playerService.addPlayer(gameId, newPlayerSameName))
+          .isInstanceOf(DuplicatePlayerException.class)
+          .hasMessageContaining("Alice")
+          .hasMessageContaining(gameId);
+
+      // Verify only one player remains in the game
+      assertThat(game.getPlayers()).hasSize(1);
+      verify(gameRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName(
+        "Should throw DuplicatePlayerException when player name matches case-insensitively")
+    void addPlayer_whenPlayerNameMatchesCaseInsensitively_throwsException() {
+      // Given
+      String gameId = "game-123";
+      Player existingPlayer = Player.createNew("Alice");
+      Player newPlayerDifferentCase = Player.createNew("ALICE"); // Same name, different case
+
+      Game game = Game.createNew();
+      game.addPlayer(existingPlayer);
+      when(gameService.findById(gameId)).thenReturn(game);
+
+      // When/Then
+      assertThatThrownBy(() -> playerService.addPlayer(gameId, newPlayerDifferentCase))
+          .isInstanceOf(DuplicatePlayerException.class)
+          .hasMessageContaining("ALICE")
+          .hasMessageContaining(gameId);
+
+      // Verify only one player remains in the game
+      assertThat(game.getPlayers()).hasSize(1);
       verify(gameRepository, never()).save(any());
     }
 

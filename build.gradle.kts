@@ -65,6 +65,35 @@ tasks.jacocoTestReport {
         html.required.set(true)
         csv.required.set(false)
     }
+
+    // Exclude Lombok-generated code and boilerplate from coverage
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    // Lombok builders (auto-generated inner classes)
+                    "**/*\$*Builder.class",
+
+                    // Spring Boot application main class
+                    "**/*Application.class",
+
+                    // Simple DTOs with just getters/setters (Lombok @Data)
+                    "**/model/dto/AddPlayerRequest.class",
+                    "**/model/dto/PlayerScoreResponse.class",
+
+                    // Entity classes (mostly Lombok generated getters/setters/builders)
+                    "**/model/entity/Card.class",
+                    "**/model/entity/Deck.class",
+                    "**/model/entity/Game.class",
+                    "**/model/entity/Player.class",
+
+                    // Exception classes (simple constructors)
+                    "**/exception/*Exception.class",
+                    "**/exception/ErrorResponse.class"
+                )
+            }
+        })
+    )
 }
 
 tasks.jacocoTestCoverageVerification {

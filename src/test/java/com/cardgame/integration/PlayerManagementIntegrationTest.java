@@ -108,4 +108,55 @@ class PlayerManagementIntegrationTest extends BaseIntegrationTest {
     // Then
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
+
+  @Test
+  @DisplayName("Should return 409 when adding player with duplicate name")
+  void addPlayer_whenPlayerNameAlreadyExists_returns409() {
+    // Given
+    Game game = createGame();
+    addPlayer(game.getId(), "Alice");
+
+    // When - Try to add another player with same name
+    AddPlayerRequest duplicateRequest = new AddPlayerRequest("Alice");
+    ResponseEntity<Map<String, Object>> response =
+        restTemplate.exchange(
+            baseUrl + "/games/" + game.getId() + "/players",
+            HttpMethod.POST,
+            new HttpEntity<>(duplicateRequest),
+            new ParameterizedTypeReference<>() {});
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    assertThat(response.getBody().get("message").toString()).contains("Alice");
+
+    // Verify only one player exists
+    Game updatedGame = getGame(game.getId());
+    assertThat(updatedGame.getPlayers()).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("Should return 409 when adding player with case-insensitive duplicate name")
+  void addPlayer_whenPlayerNameMatchesCaseInsensitively_returns409() {
+    // Given
+    Game game = createGame();
+    addPlayer(game.getId(), "Alice");
+
+    // When - Try to add player with same name but different case
+    AddPlayerRequest duplicateRequest = new AddPlayerRequest("ALICE");
+    ResponseEntity<Map<String, Object>> response =
+        restTemplate.exchange(
+            baseUrl + "/games/" + game.getId() + "/players",
+            HttpMethod.POST,
+            new HttpEntity<>(duplicateRequest),
+            new ParameterizedTypeReference<>() {});
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    assertThat(response.getBody().get("message").toString()).containsIgnoringCase("ALICE");
+
+    // Verify only one player exists
+    Game updatedGame = getGame(game.getId());
+    assertThat(updatedGame.getPlayers()).hasSize(1);
+    assertThat(updatedGame.getPlayers().get(0).getName()).isEqualTo("Alice");
+  }
 }

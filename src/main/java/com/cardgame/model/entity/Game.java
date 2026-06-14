@@ -76,6 +76,10 @@ public class Game implements Serializable {
     return this.players.stream().anyMatch(p -> p.getId().equals(playerId));
   }
 
+  public boolean hasPlayerByName(String playerName) {
+    return this.players.stream().anyMatch(p -> p.getName().equalsIgnoreCase(playerName));
+  }
+
   public Player getPlayer(String playerId) {
     return this.players.stream().filter(p -> p.getId().equals(playerId)).findFirst().orElse(null);
   }
