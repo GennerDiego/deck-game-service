@@ -38,6 +38,48 @@ class PlayerControllerTest {
   class AddPlayerTests {
 
     @Test
+    @DisplayName("Should return 401 when API key is missing")
+    void addPlayer_withoutApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(
+              new com.cardgame.exception.UnauthorizedException(
+                  "API Key is required. Provide X-API-Key header."));
+
+      // When/Then
+      mockMvc
+          .perform(
+              post("/games/{gameId}/players", "game-123")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"name\": \"Alice\"}"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.status").value(401))
+          .andExpect(jsonPath("$.message").value("API Key is required. Provide X-API-Key header."));
+
+      verify(playerService, never()).addPlayer(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should return 401 when API key is invalid")
+    void addPlayer_withInvalidApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(new com.cardgame.exception.UnauthorizedException("Invalid API Key."));
+
+      // When/Then
+      mockMvc
+          .perform(
+              post("/games/{gameId}/players", "game-123")
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content("{\"name\": \"Alice\"}")
+                  .header("X-API-Key", "invalid-key"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("Invalid API Key."));
+
+      verify(playerService, never()).addPlayer(any(), any());
+    }
+
+    @Test
     @DisplayName("Should return 400 when player name is blank")
     void addPlayer_withBlankName_returnsBadRequest() throws Exception {
       // Given
@@ -48,7 +90,8 @@ class PlayerControllerTest {
           .perform(
               post("/games/{gameId}/players", "game-123")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"name\": \"\"}"))
+                  .content("{\"name\": \"\"}")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.status").value(400))
           .andExpect(jsonPath("$.error").value("Bad Request"))
@@ -68,7 +111,8 @@ class PlayerControllerTest {
           .perform(
               post("/games/{gameId}/players", "game-123")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{}"))
+                  .content("{}")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isBadRequest())
           .andExpect(jsonPath("$.message").value("name: Player name is required"));
     }
@@ -87,7 +131,8 @@ class PlayerControllerTest {
           .perform(
               post("/games/{gameId}/players", gameId)
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"name\": \"Alice\"}"))
+                  .content("{\"name\": \"Alice\"}")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.message").value("Game with ID 'invalid-game-id' not found"));
     }
@@ -104,7 +149,8 @@ class PlayerControllerTest {
           .perform(
               post("/games/{gameId}/players", "game-123")
                   .contentType(MediaType.APPLICATION_JSON)
-                  .content("{\"name\": \"Alice\"}"))
+                  .content("{\"name\": \"Alice\"}")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isNoContent());
 
       verify(playerService, times(1)).addPlayer(eq("game-123"), any());
@@ -114,6 +160,42 @@ class PlayerControllerTest {
   @Nested
   @DisplayName("DELETE /games/{gameId}/players/{playerId} - Remove Player")
   class RemovePlayerTests {
+
+    @Test
+    @DisplayName("Should return 401 when API key is missing")
+    void removePlayer_withoutApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(
+              new com.cardgame.exception.UnauthorizedException(
+                  "API Key is required. Provide X-API-Key header."));
+
+      // When/Then
+      mockMvc
+          .perform(delete("/games/{gameId}/players/{playerId}", "game-123", "player-456"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("API Key is required. Provide X-API-Key header."));
+
+      verify(playerService, never()).removePlayer(any(), any());
+    }
+
+    @Test
+    @DisplayName("Should return 401 when API key is invalid")
+    void removePlayer_withInvalidApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(new com.cardgame.exception.UnauthorizedException("Invalid API Key."));
+
+      // When/Then
+      mockMvc
+          .perform(
+              delete("/games/{gameId}/players/{playerId}", "game-123", "player-456")
+                  .header("X-API-Key", "invalid-key"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("Invalid API Key."));
+
+      verify(playerService, never()).removePlayer(any(), any());
+    }
 
     @Test
     @DisplayName("Should return 404 when player does not exist")
@@ -129,7 +211,9 @@ class PlayerControllerTest {
 
       // When/Then
       mockMvc
-          .perform(delete("/games/{gameId}/players/{playerId}", gameId, playerId))
+          .perform(
+              delete("/games/{gameId}/players/{playerId}", gameId, playerId)
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isNotFound())
           .andExpect(
               jsonPath("$.message")
@@ -145,7 +229,9 @@ class PlayerControllerTest {
 
       // When/Then
       mockMvc
-          .perform(delete("/games/{gameId}/players/{playerId}", "game-123", "player-456"))
+          .perform(
+              delete("/games/{gameId}/players/{playerId}", "game-123", "player-456")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isNoContent());
 
       verify(playerService, times(1)).removePlayer("game-123", "player-456");
@@ -157,6 +243,45 @@ class PlayerControllerTest {
   class DealCardsTests {
 
     @Test
+    @DisplayName("Should return 401 when API key is missing")
+    void dealCards_withoutApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(
+              new com.cardgame.exception.UnauthorizedException(
+                  "API Key is required. Provide X-API-Key header."));
+
+      // When/Then
+      mockMvc
+          .perform(
+              post("/games/{gameId}/players/{playerId}/deal", "game-123", "player-456")
+                  .param("count", "2"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("API Key is required. Provide X-API-Key header."));
+
+      verify(playerService, never()).dealCards(any(), any(), anyInt());
+    }
+
+    @Test
+    @DisplayName("Should return 401 when API key is invalid")
+    void dealCards_withInvalidApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(new com.cardgame.exception.UnauthorizedException("Invalid API Key."));
+
+      // When/Then
+      mockMvc
+          .perform(
+              post("/games/{gameId}/players/{playerId}/deal", "game-123", "player-456")
+                  .param("count", "2")
+                  .header("X-API-Key", "invalid-key"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("Invalid API Key."));
+
+      verify(playerService, never()).dealCards(any(), any(), anyInt());
+    }
+
+    @Test
     @DisplayName("Should return 400 when count is zero")
     void dealCards_withZeroCount_returnsBadRequest() throws Exception {
       // Given
@@ -166,7 +291,8 @@ class PlayerControllerTest {
       mockMvc
           .perform(
               post("/games/{gameId}/players/{playerId}/deal", "game-123", "player-456")
-                  .param("count", "0"))
+                  .param("count", "0")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isBadRequest())
           .andExpect(
               jsonPath("$.message").value("dealCardsToPlayer.count: Count must be positive"));
@@ -184,7 +310,8 @@ class PlayerControllerTest {
       mockMvc
           .perform(
               post("/games/{gameId}/players/{playerId}/deal", "game-123", "player-456")
-                  .param("count", "-5"))
+                  .param("count", "-5")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isBadRequest())
           .andExpect(
               jsonPath("$.message").value("dealCardsToPlayer.count: Count must be positive"));
@@ -205,7 +332,8 @@ class PlayerControllerTest {
       mockMvc
           .perform(
               post("/games/{gameId}/players/{playerId}/deal", "game-123", "player-456")
-                  .param("count", "2"))
+                  .param("count", "2")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$").isArray())
           .andExpect(jsonPath("$.length()").value(2))
@@ -228,7 +356,9 @@ class PlayerControllerTest {
 
       // When/Then
       mockMvc
-          .perform(post("/games/{gameId}/players/{playerId}/deal", "game-123", "player-456"))
+          .perform(
+              post("/games/{gameId}/players/{playerId}/deal", "game-123", "player-456")
+                  .header("X-API-Key", "valid-key"))
           .andExpect(status().isOk())
           .andExpect(jsonPath("$.length()").value(1));
 

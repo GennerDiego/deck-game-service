@@ -1,5 +1,6 @@
 package com.cardgame.controller;
 
+import com.cardgame.annotation.AuthApiKey;
 import com.cardgame.model.dto.AddPlayerRequest;
 import com.cardgame.model.dto.PlayerScoreResponse;
 import com.cardgame.model.entity.Card;
@@ -22,6 +23,7 @@ public class PlayerController {
   private final PlayerService playerService;
 
   @PostMapping
+  @AuthApiKey
   public ResponseEntity<Void> addPlayerToGame(
       @PathVariable String gameId, @Valid @RequestBody AddPlayerRequest request) {
     Player player = Player.createNew(request.getName());
@@ -30,6 +32,7 @@ public class PlayerController {
   }
 
   @DeleteMapping("/{playerId}")
+  @AuthApiKey
   public ResponseEntity<Void> removePlayerFromGame(
       @PathVariable String gameId, @PathVariable String playerId) {
     playerService.removePlayer(gameId, playerId);
@@ -37,6 +40,7 @@ public class PlayerController {
   }
 
   @PostMapping("/{playerId}/deal")
+  @AuthApiKey
   public ResponseEntity<List<Card>> dealCardsToPlayer(
       @PathVariable String gameId,
       @PathVariable String playerId,

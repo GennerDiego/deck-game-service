@@ -64,16 +64,19 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   // ==================== DECK OPERATIONS ====================
 
   protected void addDeckToGame(String gameId) {
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
     ResponseEntity<Void> response =
-        restTemplate.postForEntity(baseUrl + "/games/" + gameId + "/decks", null, Void.class);
+        restTemplate.exchange(
+            baseUrl + "/games/" + gameId + "/decks", HttpMethod.POST, request, Void.class);
     assertThat(response.getStatusCode())
         .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
   }
 
   protected void shuffleDeck(String gameId) {
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
     ResponseEntity<Void> response =
-        restTemplate.postForEntity(
-            baseUrl + "/games/" + gameId + "/decks/shuffle", null, Void.class);
+        restTemplate.exchange(
+            baseUrl + "/games/" + gameId + "/decks/shuffle", HttpMethod.POST, request, Void.class);
     assertThat(response.getStatusCode())
         .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
   }
@@ -81,9 +84,11 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   // ==================== PLAYER OPERATIONS ====================
 
   protected String addPlayer(String gameId, String playerName) {
-    AddPlayerRequest request = new AddPlayerRequest(playerName);
+    AddPlayerRequest requestBody = new AddPlayerRequest(playerName);
+    HttpEntity<AddPlayerRequest> request = new HttpEntity<>(requestBody, createAuthHeaders());
     ResponseEntity<Void> response =
-        restTemplate.postForEntity(baseUrl + "/games/" + gameId + "/players", request, Void.class);
+        restTemplate.exchange(
+            baseUrl + "/games/" + gameId + "/players", HttpMethod.POST, request, Void.class);
     assertThat(response.getStatusCode())
         .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);
 
@@ -97,11 +102,12 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   }
 
   protected void removePlayer(String gameId, String playerId) {
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
     ResponseEntity<Void> response =
         restTemplate.exchange(
             baseUrl + "/games/" + gameId + "/players/" + playerId,
             HttpMethod.DELETE,
-            null,
+            request,
             Void.class);
     assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
   }
@@ -109,11 +115,12 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   // ==================== CARD OPERATIONS ====================
 
   protected List<Card> dealCards(String gameId, String playerId, int count) {
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
     ResponseEntity<Card[]> response =
         restTemplate.exchange(
             baseUrl + "/games/" + gameId + "/players/" + playerId + "/deal?count=" + count,
             HttpMethod.POST,
-            null,
+            request,
             Card[].class);
     assertThat(response.getStatusCode())
         .isIn(HttpStatus.OK, HttpStatus.CREATED, HttpStatus.NO_CONTENT);

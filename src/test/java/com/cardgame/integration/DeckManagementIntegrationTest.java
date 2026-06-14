@@ -9,6 +9,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +63,7 @@ class DeckManagementIntegrationTest extends BaseIntegrationTest {
         restTemplate.exchange(
             baseUrl + "/games/" + invalidGameId + "/decks",
             HttpMethod.POST,
-            null,
+            new HttpEntity<>(createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
 
     // Then

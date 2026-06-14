@@ -82,7 +82,7 @@ class PlayerManagementIntegrationTest extends BaseIntegrationTest {
         restTemplate.exchange(
             baseUrl + "/games/" + game.getId() + "/players/" + invalidPlayerId,
             HttpMethod.DELETE,
-            null,
+            new HttpEntity<>(createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
 
     // Then
@@ -102,7 +102,7 @@ class PlayerManagementIntegrationTest extends BaseIntegrationTest {
         restTemplate.exchange(
             baseUrl + "/games/" + invalidGameId + "/players",
             HttpMethod.POST,
-            new HttpEntity<>(request),
+            new HttpEntity<>(request, createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
 
     // Then
@@ -122,7 +122,7 @@ class PlayerManagementIntegrationTest extends BaseIntegrationTest {
         restTemplate.exchange(
             baseUrl + "/games/" + game.getId() + "/players",
             HttpMethod.POST,
-            new HttpEntity<>(duplicateRequest),
+            new HttpEntity<>(duplicateRequest, createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
 
     // Then
@@ -147,7 +147,7 @@ class PlayerManagementIntegrationTest extends BaseIntegrationTest {
         restTemplate.exchange(
             baseUrl + "/games/" + game.getId() + "/players",
             HttpMethod.POST,
-            new HttpEntity<>(duplicateRequest),
+            new HttpEntity<>(duplicateRequest, createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
 
     // Then

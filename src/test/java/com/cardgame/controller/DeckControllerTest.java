@@ -32,6 +32,41 @@ class DeckControllerTest {
   class AddDeckTests {
 
     @Test
+    @DisplayName("Should return 401 when API key is missing")
+    void addDeck_withoutApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(
+              new com.cardgame.exception.UnauthorizedException(
+                  "API Key is required. Provide X-API-Key header."));
+
+      // When/Then
+      mockMvc
+          .perform(post("/games/{gameId}/decks", "game-123"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.status").value(401))
+          .andExpect(jsonPath("$.message").value("API Key is required. Provide X-API-Key header."));
+
+      verify(deckService, never()).addDeckToGame(any());
+    }
+
+    @Test
+    @DisplayName("Should return 401 when API key is invalid")
+    void addDeck_withInvalidApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(new com.cardgame.exception.UnauthorizedException("Invalid API Key."));
+
+      // When/Then
+      mockMvc
+          .perform(post("/games/{gameId}/decks", "game-123").header("X-API-Key", "invalid-key"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("Invalid API Key."));
+
+      verify(deckService, never()).addDeckToGame(any());
+    }
+
+    @Test
     @DisplayName("Should return 404 when game does not exist")
     void addDeck_whenGameNotFound_returns404() throws Exception {
       // Given
@@ -42,7 +77,7 @@ class DeckControllerTest {
 
       // When/Then
       mockMvc
-          .perform(post("/games/{gameId}/decks", gameId))
+          .perform(post("/games/{gameId}/decks", gameId).header("X-API-Key", "valid-key"))
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.message").value("Game with ID 'invalid-game-id' not found"));
     }
@@ -55,7 +90,9 @@ class DeckControllerTest {
       doNothing().when(deckService).addDeckToGame("game-123");
 
       // When/Then
-      mockMvc.perform(post("/games/{gameId}/decks", "game-123")).andExpect(status().isNoContent());
+      mockMvc
+          .perform(post("/games/{gameId}/decks", "game-123").header("X-API-Key", "valid-key"))
+          .andExpect(status().isNoContent());
 
       verify(deckService, times(1)).addDeckToGame("game-123");
     }
@@ -66,6 +103,41 @@ class DeckControllerTest {
   class ShuffleDeckTests {
 
     @Test
+    @DisplayName("Should return 401 when API key is missing")
+    void shuffleDeck_withoutApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(
+              new com.cardgame.exception.UnauthorizedException(
+                  "API Key is required. Provide X-API-Key header."));
+
+      // When/Then
+      mockMvc
+          .perform(post("/games/{gameId}/decks/shuffle", "game-123"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("API Key is required. Provide X-API-Key header."));
+
+      verify(deckService, never()).shuffleGameDeck(any());
+    }
+
+    @Test
+    @DisplayName("Should return 401 when API key is invalid")
+    void shuffleDeck_withInvalidApiKey_returnsUnauthorized() throws Exception {
+      // Given - Interceptor throws UnauthorizedException
+      when(apiKeyInterceptor.preHandle(any(), any(), any()))
+          .thenThrow(new com.cardgame.exception.UnauthorizedException("Invalid API Key."));
+
+      // When/Then
+      mockMvc
+          .perform(
+              post("/games/{gameId}/decks/shuffle", "game-123").header("X-API-Key", "invalid-key"))
+          .andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("Invalid API Key."));
+
+      verify(deckService, never()).shuffleGameDeck(any());
+    }
+
+    @Test
     @DisplayName("Should return 204 when deck is shuffled successfully")
     void shuffleDeck_withValidGameId_returnsNoContent() throws Exception {
       // Given
@@ -74,7 +146,8 @@ class DeckControllerTest {
 
       // When/Then
       mockMvc
-          .perform(post("/games/{gameId}/decks/shuffle", "game-123"))
+          .perform(
+              post("/games/{gameId}/decks/shuffle", "game-123").header("X-API-Key", "valid-key"))
           .andExpect(status().isNoContent());
 
       verify(deckService, times(1)).shuffleGameDeck("game-123");
@@ -89,7 +162,8 @@ class DeckControllerTest {
 
       // When/Then
       mockMvc
-          .perform(post("/games/{gameId}/decks/shuffle", "game-123"))
+          .perform(
+              post("/games/{gameId}/decks/shuffle", "game-123").header("X-API-Key", "valid-key"))
           .andExpect(status().isNoContent());
     }
 
@@ -104,7 +178,7 @@ class DeckControllerTest {
 
       // When/Then
       mockMvc
-          .perform(post("/games/{gameId}/decks/shuffle", gameId))
+          .perform(post("/games/{gameId}/decks/shuffle", gameId).header("X-API-Key", "valid-key"))
           .andExpect(status().isNotFound())
           .andExpect(jsonPath("$.message").value("Game with ID 'invalid-game-id' not found"));
     }

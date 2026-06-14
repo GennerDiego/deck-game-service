@@ -7,7 +7,7 @@ import org.testcontainers.utility.DockerImageName;
  * Singleton Redis container shared across all tests. Starts only once before all tests and reuses
  * the same instance. Automatically stopped and removed when JVM exits.
  *
- * <p>Uses Testcontainers' Ryuk container for automatic cleanup - no manual shutdown hooks needed.
+ * <p>Uses Testcontainers' Ryuk container for automatic cleanup.
  */
 public class RedisTestContainer {
 
@@ -21,7 +21,7 @@ public class RedisTestContainer {
       container =
           new GenericContainer<>(DockerImageName.parse(REDIS_IMAGE))
               .withExposedPorts(REDIS_PORT)
-              .withReuse(false); // Don't reuse between Gradle runs, only within same test execution
+              .withReuse(false); // Don't reuse between Gradle runs
 
       container.start();
 
@@ -31,7 +31,18 @@ public class RedisTestContainer {
               + ":"
               + container.getFirstMappedPort());
       System.out.println("🔄 Container will be reused across all test classes");
-      System.out.println("🗑️  Container will be cleaned up automatically by Ryuk when JVM exits");
+
+      // Register shutdown hook to ensure cleanup
+      Runtime.getRuntime()
+          .addShutdownHook(
+              new Thread(
+                  () -> {
+                    if (container != null && container.isRunning()) {
+                      System.out.println("🛑 Stopping Redis Testcontainer...");
+                      container.stop();
+                      System.out.println("✅ Redis Testcontainer stopped and removed");
+                    }
+                  }));
     }
     return container;
   }
