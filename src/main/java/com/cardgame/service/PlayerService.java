@@ -24,8 +24,14 @@ public class PlayerService {
   public void addPlayer(String gameId, Player player) {
     Game game = gameService.findById(gameId);
 
+    // Check for duplicate player ID
     if (game.hasPlayer(player.getId())) {
       throw new DuplicatePlayerException(player.getId(), gameId);
+    }
+
+    // Check for duplicate player name (case-insensitive)
+    if (game.hasPlayerByName(player.getName())) {
+      throw new DuplicatePlayerException(player.getName(), gameId);
     }
 
     game.addPlayer(player);

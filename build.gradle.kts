@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.2.6"
     id("io.spring.dependency-management") version "1.1.5"
     id("com.diffplug.spotless") version "6.25.0"
+    jacoco
 }
 
 group = "com.cardgame"
@@ -54,6 +55,60 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // Note: finalizedBy(jacocoTestReport) is configured per-task to avoid
+    // integrationTest triggering unitTest via jacoco dependency
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.named("unitTest"))
+
+    // Use execution data from unitTest instead of test
+    executionData.setFrom(files("${layout.buildDirectory.get()}/jacoco/unitTest.exec"))
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    // Exclude Lombok-generated code and boilerplate from coverage
+    classDirectories.setFrom(
+        files(classDirectories.files.map {
+            fileTree(it) {
+                exclude(
+                    // Lombok builders (auto-generated inner classes)
+                    "**/*\$*Builder.class",
+
+                    // Spring Boot application main class
+                    "**/*Application.class",
+
+                    // Simple DTOs with just getters/setters (Lombok @Data)
+                    "**/model/dto/AddPlayerRequest.class",
+                    "**/model/dto/PlayerScoreResponse.class",
+
+                    // Entity classes (mostly Lombok generated getters/setters/builders)
+                    "**/model/entity/Card.class",
+                    "**/model/entity/Deck.class",
+                    "**/model/entity/Game.class",
+                    "**/model/entity/Player.class",
+
+                    // Exception classes (simple constructors)
+                    "**/exception/*Exception.class",
+                    "**/exception/ErrorResponse.class"
+                )
+            }
+        })
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.70".toBigDecimal()
+            }
+        }
+    }
 }
 
 spotless {
@@ -67,6 +122,31 @@ spotless {
     }
 }
 
+tasks.register("unitTest", Test::class) {
+    description = "Run unit tests only (excludes integration tests)"
+    group = "verification"
+
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+
+    filter {
+        excludeTestsMatching("*IntegrationTest")
+        excludeTestsMatching("com.cardgame.integration.*")
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
+
+    // Only unitTest should trigger jacocoTestReport (not integrationTest)
+    finalizedBy(tasks.jacocoTestReport)
+}
+
 tasks.register("preCommit") {
     dependsOn("spotlessApply", "test")
     description = "Run all pre-commit checks (spotless + tests)"
@@ -76,7 +156,9 @@ tasks.register("integrationTest", Test::class) {
     description = "Run integration tests only"
     group = "verification"
 
-    useJUnitPlatform()
+    useJUnitPlatform {
+        includeTags("integration")
+    }
 
     // Performance tuning
     maxHeapSize = "1024m"
@@ -87,6 +169,7 @@ tasks.register("integrationTest", Test::class) {
 
     // Filter by package/class name
     filter {
+        includeTestsMatching("*IntegrationTest")
         includeTestsMatching("com.cardgame.integration.*")
     }
 

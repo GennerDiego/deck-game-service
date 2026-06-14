@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -169,7 +170,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
         restTemplate.exchange(
             baseUrl + "/games/" + game.getId() + "/players/" + playerId + "/deal?count=0",
             HttpMethod.POST,
-            null,
+            new HttpEntity<>(createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
 
     // Then
@@ -190,7 +191,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
         restTemplate.exchange(
             baseUrl + "/games/" + game.getId() + "/players/" + invalidPlayerId + "/deal?count=1",
             HttpMethod.POST,
-            null,
+            new HttpEntity<>(createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
 
     // Then

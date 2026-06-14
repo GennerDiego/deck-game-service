@@ -1,5 +1,6 @@
 package com.cardgame.controller;
 
+import com.cardgame.annotation.AuthApiKey;
 import com.cardgame.service.DeckService;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +15,14 @@ public class DeckController {
   private final DeckService deckService;
 
   @PostMapping
+  @AuthApiKey
   public ResponseEntity<Void> addDeckToGame(@PathVariable String gameId) {
     deckService.addDeckToGame(gameId);
     return ResponseEntity.noContent().build();
   }
 
   @PostMapping("/shuffle")
+  @AuthApiKey
   public ResponseEntity<Void> shuffleGameDeck(@PathVariable String gameId) {
     deckService.shuffleGameDeck(gameId);
     return ResponseEntity.noContent().build();

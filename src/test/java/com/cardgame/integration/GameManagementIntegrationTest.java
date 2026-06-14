@@ -84,13 +84,14 @@ class GameManagementIntegrationTest extends BaseIntegrationTest {
   void deleteGame_whenGameDoesNotExist_returns404() {
     // Given
     String invalidGameId = "invalid-game-id";
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
 
     // When
     ResponseEntity<Map<String, Object>> response =
         restTemplate.exchange(
             baseUrl + "/games/" + invalidGameId,
             HttpMethod.DELETE,
-            null,
+            request,
             new ParameterizedTypeReference<>() {});
 
     // Then
