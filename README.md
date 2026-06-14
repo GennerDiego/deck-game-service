@@ -4,6 +4,13 @@ A Spring Boot REST API service that implements a poker-style deck of cards game 
 
 ## 🚀 Quick Start
 
+> **⚡ TL;DR - Start in 30 seconds:**
+> ```bash
+> docker compose up
+> # Default API Key: default-api-key-change-me
+> # Access: http://localhost:8080/api/v1/swagger-ui.html
+> ```
+
 ### Prerequisites
 - **Docker & Docker Compose** (recommended - easiest setup)
 - OR Java 17+ and Gradle 8.8 (for local development)
@@ -17,11 +24,14 @@ A Spring Boot REST API service that implements a poker-style deck of cards game 
 git clone <repository-url>
 cd deck-game-service
 
+# Configure API key (optional - defaults to 'default-api-key-change-me')
+echo "API_KEY=my-secret-key" > .env
+
 # Start everything (app + Redis)
-docker-compose up
+docker compose up
 
 # Or run in background
-docker-compose up -d
+docker compose up -d
 ```
 
 **Access the application:**
@@ -31,30 +41,36 @@ docker-compose up -d
 
 **Stop services:**
 ```bash
-docker-compose down
+docker compose down
 
 # Remove volumes (reset Redis data)
-docker-compose down -v
+docker compose down -v
 ```
 
 ### Option 2: Run Locally (Development)
 
 1. **Start Redis**
    ```bash
-   docker-compose up -d redis
+   docker compose up -d redis
    ```
 
-2. **Build the project**
+2. **Configure API key (optional)**
+   ```bash
+   export API_KEY=my-local-dev-key
+   # Or use default: 'default-api-key-change-me'
+   ```
+
+3. **Build the project**
    ```bash
    ./gradlew clean build
    ```
 
-3. **Run the application**
+4. **Run the application**
    ```bash
    ./gradlew bootRun
    ```
 
-4. **Access the API**
+5. **Access the API**
    - Swagger UI: http://localhost:8080/api/v1/swagger-ui.html
    - API Docs: http://localhost:8080/api/v1/api-docs
    - Health Check: http://localhost:8080/api/v1/actuator/health
@@ -99,27 +115,29 @@ src/
 
 ```bash
 # Start all services
-docker-compose up
+docker compose up
 
 # Start in background (detached mode)
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
-docker-compose logs -f app  # Only app logs
+docker compose logs -f
+docker compose logs -f app  # Only app logs
 
 # Rebuild after code changes
-docker-compose up --build
+docker compose up --build
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes (reset Redis)
-docker-compose down -v
+docker compose down -v
+
+# Check service status
+docker compose ps
 
 # Execute commands inside container
-docker-compose exec app bash
-docker-compose exec app ./gradlew test
+docker compose exec app bash
 ```
 
 ### Gradle Commands
@@ -184,140 +202,236 @@ docker-compose exec app ./gradlew test
 - Cards can be dealt until deck is empty
 - Score calculation: Ace=1, 2-10=face value, Jack=11, Queen=12, King=13
 
+## 🔐 Authentication
+
+The API uses **API Key authentication** for state-changing operations (POST/DELETE endpoints).
+
+### 🔑 Default API Key
+
+```
+default-api-key-change-me
+```
+
+**How to use:**
+```bash
+# Include in all POST/DELETE requests:
+curl -X POST http://localhost:8080/api/v1/games \
+  -H "X-API-Key: default-api-key-change-me"
+```
+
+### Configure Custom API Key
+
+**For Docker Compose:**
+```bash
+# Create .env file
+echo "API_KEY=your-secret-key" > .env
+
+# Start services
+docker compose up
+```
+
+**For Local Development:**
+```bash
+# Export environment variable
+export API_KEY=your-secret-key
+
+# Run application
+./gradlew bootRun
+```
+
+### Protected Endpoints (Require X-API-Key header)
+
+All **POST** and **DELETE** operations require authentication:
+
+```bash
+# Include API key in all POST/DELETE requests
+curl -X POST http://localhost:8080/api/v1/games \
+  -H "X-API-Key: default-api-key-change-me"
+```
+
+### Public Endpoints (No authentication required)
+
+All **GET** operations are public:
+- `GET /api/v1/games/{gameId}`
+- `GET /api/v1/games/{gameId}/players/{playerId}/cards`
+- `GET /api/v1/games/{gameId}/players/scores`
+- `GET /api/v1/games/{gameId}/decks/suits-count`
+- `GET /api/v1/games/{gameId}/decks/cards-count`
+
 ## 📡 API Endpoints
 
 ### Game Management
+
 ```bash
-# Create a game
+# Create a game (requires API key)
 POST /api/v1/games
+Header: X-API-Key: your-api-key
 
-# Delete a game
+# Get game details (public)
+GET /api/v1/games/{gameId}
+
+# Delete a game (requires API key)
 DELETE /api/v1/games/{gameId}
-
-# Shuffle game deck
-POST /api/v1/games/{gameId}/decks/shuffle
+Header: X-API-Key: your-api-key
 ```
 
 ### Deck Management
-```bash
-# Create a standard 52-card deck
-POST /api/v1/decks
 
-# Add deck to game
+```bash
+# Add deck to game (requires API key)
 POST /api/v1/games/{gameId}/decks
-Body: { "deckId": "deck-uuid" }
+Header: X-API-Key: your-api-key
+
+# Shuffle game deck (requires API key)
+POST /api/v1/games/{gameId}/decks/shuffle
+Header: X-API-Key: your-api-key
+
+# Count undealt cards by suit (public)
+GET /api/v1/games/{gameId}/decks/suits-count
+
+# Count each remaining card (public)
+GET /api/v1/games/{gameId}/decks/cards-count
 ```
 
 ### Player Management
+
 ```bash
-# Add player to game
+# Add player to game (requires API key)
 POST /api/v1/games/{gameId}/players
+Header: X-API-Key: your-api-key
 Body: { "name": "Alice" }
 
-# Remove player from game
+# Remove player from game (requires API key)
 DELETE /api/v1/games/{gameId}/players/{playerId}
-```
+Header: X-API-Key: your-api-key
 
-### Card Operations
-```bash
-# Deal cards to player
-POST /api/v1/games/{gameId}/players/{playerId}/deal?count=5
-
-# Get player's cards
-GET /api/v1/games/{gameId}/players/{playerId}/cards
-
-# Get all players with scores (sorted)
+# Get all players with scores - sorted (public)
 GET /api/v1/games/{gameId}/players/scores
 ```
 
-### Game Deck Queries
-```bash
-# Count undealt cards by suit
-GET /api/v1/games/{gameId}/decks/suits-count
+### Card Operations
 
-# Count each remaining card
-GET /api/v1/games/{gameId}/decks/cards-count
+```bash
+# Deal cards to player (requires API key)
+POST /api/v1/games/{gameId}/players/{playerId}/deal?count=5
+Header: X-API-Key: your-api-key
+
+# Get player's cards (public)
+GET /api/v1/games/{gameId}/players/{playerId}/cards
 ```
 
 ## 🎮 Usage Example
 
 ```bash
+# Set API key for convenience
+API_KEY="default-api-key-change-me"
+
 # 1. Create a game
-curl -X POST http://localhost:8080/api/v1/games
-# Response: { "gameId": "game-123" }
+curl -X POST http://localhost:8080/api/v1/games \
+  -H "X-API-Key: $API_KEY"
+# Response: { "id": "game-123", ... }
 
-# 2. Create a deck
-curl -X POST http://localhost:8080/api/v1/decks
-# Response: { "deckId": "deck-456" }
-
-# 3. Add deck to game
+# 2. Add deck to game
 curl -X POST http://localhost:8080/api/v1/games/game-123/decks \
-  -H "Content-Type: application/json" \
-  -d '{"deckId": "deck-456"}'
+  -H "X-API-Key: $API_KEY"
 
-# 4. Add a player
+# 3. Add a player
 curl -X POST http://localhost:8080/api/v1/games/game-123/players \
+  -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"name": "Alice"}'
-# Response: { "playerId": "player-789" }
+
+# 4. Get game to retrieve player ID
+curl -X GET http://localhost:8080/api/v1/games/game-123
+# Response includes players array with IDs
 
 # 5. Shuffle the deck
-curl -X POST http://localhost:8080/api/v1/games/game-123/decks/shuffle
+curl -X POST http://localhost:8080/api/v1/games/game-123/decks/shuffle \
+  -H "X-API-Key: $API_KEY"
 
 # 6. Deal 5 cards to Alice
-curl -X POST "http://localhost:8080/api/v1/games/game-123/players/player-789/deal?count=5"
+curl -X POST "http://localhost:8080/api/v1/games/game-123/players/player-789/deal?count=5" \
+  -H "X-API-Key: $API_KEY"
 
-# 7. View Alice's cards
+# 7. View Alice's cards (public endpoint - no API key)
 curl -X GET http://localhost:8080/api/v1/games/game-123/players/player-789/cards
 
-# 8. View player rankings
+# 8. View player rankings (public endpoint - no API key)
 curl -X GET http://localhost:8080/api/v1/games/game-123/players/scores
 ```
 
 ## 📋 Implementation Status
 
 ### Completed ✅
-- Project structure and package organization
-- Gradle configuration with Kotlin DSL
-- Domain models (Card, Deck, Game, Player, Suit, Rank)
-- Docker Compose with Redis
-- Application configuration (Spring Boot, Redis, Swagger)
-- Spotless code formatting with Google Java Format
-- Logging configuration
-
-### In Progress ⏳
-- Redis repository layer
-- Service layer (GameService, DeckService, PlayerService)
-- REST controllers
-- Custom exceptions and global exception handler
-- Shuffle utility (Fisher-Yates algorithm)
-- Input validation
-- Unit tests
-- Integration tests with Testcontainers
-
-### Planned 📝
-- API documentation with OpenAPI/Swagger annotations
-- Metrics and monitoring (Micrometer)
-- Performance testing
-- CI/CD pipeline
+- ✅ Project structure and package organization
+- ✅ Gradle configuration with Kotlin DSL
+- ✅ Domain models (Card, Deck, Game, Player, Suit, Rank)
+- ✅ Docker Compose with Redis
+- ✅ Application configuration (Spring Boot, Redis, Swagger)
+- ✅ Spotless code formatting with Google Java Format
+- ✅ Logging configuration (console + file with profiles)
+- ✅ Redis repository layer (generic JSON repository pattern)
+- ✅ Service layer (GameService, DeckService, PlayerService)
+- ✅ REST controllers (GameController, DeckController, PlayerController)
+- ✅ Custom exceptions and global exception handler
+- ✅ Shuffle utility (Fisher-Yates algorithm)
+- ✅ Input validation (Bean Validation + business rules)
+- ✅ Unit tests (128 tests - 94% coverage)
+- ✅ Integration tests with Testcontainers (46 tests)
+- ✅ API Key authentication (X-API-Key header for POST/DELETE)
+- ✅ API documentation with OpenAPI/Swagger
+- ✅ CI/CD pipeline (GitHub Actions)
+- ✅ Docker multi-stage build
+- ✅ Duplicate player name validation (case-insensitive)
 
 ## 🧪 Testing
 
-The project includes:
-- **Unit Tests**: Domain logic, shuffle algorithm, score calculation
-- **Integration Tests**: Redis persistence, REST endpoints with Testcontainers
-- **Test Coverage Target**: 70%+ code coverage
+The project includes comprehensive test coverage:
+
+### Test Statistics
+- **Total Tests**: 174 tests
+  - Unit Tests: 128 tests (controllers, services, utilities, exception handlers)
+  - Integration Tests: 46 tests (full API + Redis with Testcontainers)
+- **Code Coverage**: 94.08%
+- **Test Framework**: JUnit 5, Mockito, AssertJ, Testcontainers
+
+### Test Commands
 
 ```bash
-# Run all tests
+# Run all tests (unit + integration)
 ./gradlew test
 
-# Run tests with coverage report
+# Run unit tests only (no Redis container)
+./gradlew unitTest
+
+# Run integration tests only (with Testcontainers)
+./gradlew integrationTest
+
+# Run specific test class
+./gradlew test --tests GameControllerTest
+
+# Run with coverage report
 ./gradlew test jacocoTestReport
 
 # View coverage report
 open build/reports/jacoco/test/html/index.html
 ```
+
+### Test Categories
+
+**Unit Tests:**
+- Controllers: API contract validation with mocked services
+- Services: Business logic with mocked repositories
+- Utilities: Fisher-Yates shuffle algorithm
+- Exception Handlers: Error response formatting
+- Interceptors: API key authentication logic
+
+**Integration Tests:**
+- Full API workflows with real Redis (Testcontainers)
+- Game management, deck operations, player management
+- Card dealing and scoring
+- Duplicate name validation
+- API key authentication enforcement
 
 ## 🐳 Docker Setup
 
@@ -435,6 +549,88 @@ docs(api): add OpenAPI documentation for endpoints
 - Test naming: `methodName_scenario_expectedResult()`
 - Minimum 70% code coverage
 - Always run Spotless before committing
+
+## 🚀 CI/CD Pipeline
+
+The project includes a **GitHub Actions** pipeline that runs on every push and pull request.
+
+### Pipeline Stages
+
+#### 1. **Unit Tests & Code Coverage** ⚡
+- Runs Spotless code formatting check
+- Executes 128 unit tests (controllers, services, utilities)
+- Generates Jacoco coverage report (target: 70%+, current: 94%)
+- Posts coverage summary as PR comment
+- **Duration**: ~30 seconds
+
+#### 2. **Integration Tests** 🔗
+- Starts Redis using Docker services
+- Runs 46 integration tests with Testcontainers
+- Tests full API workflows with real Redis
+- Validates authentication, game flows, and data persistence
+- **Duration**: ~45 seconds
+
+#### 3. **Smoke Test - Docker** 🔥
+- Builds Docker image with multi-stage build
+- Starts services with Docker Compose (app + Redis)
+- Waits for application health endpoint
+- Verifies application is running correctly
+- **Duration**: ~1-2 minutes
+
+### Pipeline Triggers
+
+```yaml
+# Runs on:
+- Every push to any branch
+- Every pull request
+- Manual workflow dispatch
+```
+
+### Pipeline Status
+
+Check pipeline status in:
+- **GitHub Actions tab**: https://github.com/your-org/deck-game-service/actions
+- **PR checks**: Appears as "CI" check on pull requests
+- **Branch protection**: Configure to require CI passing before merge
+
+### Coverage Reporting
+
+The pipeline automatically posts code coverage to PRs:
+
+```
+📊 Code Coverage Report
+━━━━━━━━━━━━━━━━━━━━━━━
+✅ Good - Coverage: 94.08%
+
+Coverage Levels:
+✅ Excellent: ≥80%
+✅ Good: ≥70%
+🟡 Acceptable: ≥60%
+🔴 Needs Improvement: <60%
+```
+
+### Local CI Simulation
+
+Run the same checks locally before pushing:
+
+```bash
+# 1. Code formatting
+./gradlew spotlessCheck
+
+# 2. Unit tests
+./gradlew unitTest
+
+# 3. Coverage report
+./gradlew jacocoTestReport
+
+# 4. Integration tests
+./gradlew integrationTest
+
+# 5. Docker smoke test
+docker compose up --build -d
+curl http://localhost:8080/api/v1/actuator/health
+docker compose down
+```
 
 ## 🐛 Troubleshooting
 

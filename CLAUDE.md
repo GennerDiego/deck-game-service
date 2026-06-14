@@ -2,11 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Quick Reference
+
+> **🚀 Run Application:**
+> ```bash
+> docker compose up
+> ```
+> 
+> **🔑 Default API Key**: `default-api-key-change-me`
+> 
+> **📍 Swagger UI**: http://localhost:8080/api/v1/swagger-ui.html
+>
+> **🔒 Authentication**: Add header `X-API-Key: default-api-key-change-me` to all POST/DELETE requests
+
 ## Project Overview
 
 This is a Spring Boot REST API service that implements a poker-style deck of cards game system with Redis as the primary data store. The service allows creating games, managing decks and players, dealing cards, and tracking scores.
 
-**Status**: Project is in planning phase. Implementation has not yet started.
+**Status**: ✅ Completed - Production ready with 94% test coverage
 
 ## Technology Stack
 
@@ -249,46 +262,84 @@ chore(deps): update Spring Boot to 3.2.0
 ```
 
 ### Running Locally
+
+**Option 1: Docker Compose (Recommended)**
 ```bash
-# Start Redis
-docker-compose up -d
+# Configure API key (optional)
+echo "API_KEY=my-dev-key" > .env
+
+# Start everything (app + Redis)
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+```
+
+**Option 2: Local Development**
+```bash
+# Start Redis only
+docker compose up -d redis
+
+# Configure API key (optional - defaults to 'default-api-key-change-me')
+export API_KEY=my-dev-key
 
 # Run application
 ./gradlew bootRun
-
-# Access Swagger UI
-# http://localhost:8080/api/v1/swagger-ui.html
-
-# Access API docs
-# http://localhost:8080/api/v1/api-docs
-
-# Health check
-# http://localhost:8080/api/v1/actuator/health
 ```
+
+**Access Points:**
+- Swagger UI: http://localhost:8080/api/v1/swagger-ui.html
+- API Docs: http://localhost:8080/api/v1/api-docs
+- Health Check: http://localhost:8080/api/v1/actuator/health
+
+**API Key Authentication:**
+
+The API requires `X-API-Key` header for all **POST** and **DELETE** operations:
+
+```bash
+# Example: Create game with API key
+curl -X POST http://localhost:8080/api/v1/games \
+  -H "X-API-Key: default-api-key-change-me"
+```
+
+**Default API Key**: `default-api-key-change-me`
+
+**GET endpoints** (read operations) do not require authentication.
 
 ### Testing
 ```bash
-# Run all tests (unit + integration)
+# Run all tests (unit + integration) - 174 tests
 ./gradlew test
 
-# Run only integration tests (recommended for E2E validation)
+# Run unit tests only (128 tests - no Redis container)
+./gradlew unitTest
+
+# Run integration tests only (46 tests - with Testcontainers)
 ./gradlew integrationTest
 
 # Run integration tests with detailed logs
 ./gradlew integrationTest --info
 
 # Run specific test file
+./gradlew test --tests GameControllerTest
 ./gradlew test --tests GameManagementIntegrationTest
-./gradlew test --tests DealCardsIntegrationTest
-./gradlew test --tests RealisticGameFlowIntegrationTest
+./gradlew test --tests ShuffleUtilTest
 
 # Run specific test method
 ./gradlew test --tests "DealCardsIntegrationTest.dealCards_afterShuffle*"
 
-# Run tests with coverage
+# Run tests with coverage report (current: 94.08%)
 ./gradlew test jacocoTestReport
 # open build/reports/jacoco/test/html/index.html
 ```
+
+**Test Statistics:**
+- Total Tests: 174 (128 unit + 46 integration)
+- Code Coverage: 94.08%
+- Test Framework: JUnit 5, Mockito, AssertJ, Testcontainers
 
 ### Code Formatting
 ```bash
@@ -298,6 +349,108 @@ docker-compose up -d
 # Apply formatting fixes
 ./gradlew spotlessApply
 ```
+
+## CI/CD Pipeline
+
+The project uses **GitHub Actions** for continuous integration and deployment.
+
+### Pipeline Configuration
+
+**File**: `.github/workflows/ci.yml`
+
+**Triggers**:
+- Push to any branch
+- Pull requests
+- Manual workflow dispatch
+
+### Pipeline Stages
+
+#### 1. Unit Tests & Code Coverage (~30s)
+- Runs `spotlessCheck` to verify code formatting
+- Executes `unitTest` task (128 tests, no Redis)
+- Generates Jacoco coverage report
+- Posts coverage summary as PR comment
+- Uploads coverage artifacts
+
+**Success Criteria**:
+- All unit tests pass
+- Code formatting is clean
+- Coverage meets 70% threshold (current: 94%)
+
+#### 2. Integration Tests (~45s)
+- Starts Redis container via GitHub Actions services
+- Runs `integrationTest` task (46 tests with Testcontainers)
+- Tests full API workflows with real Redis
+- Validates authentication, game flows, data persistence
+- Uploads test results as artifacts
+
+**Success Criteria**:
+- All integration tests pass
+- Redis connectivity works
+- API endpoints behave correctly
+
+#### 3. Smoke Test - Docker (~1-2min)
+- Builds Docker image using multi-stage Dockerfile
+- Starts services with `docker compose up`
+- Waits for health endpoint to respond
+- Verifies application is running correctly
+- Shows container logs on failure
+
+**Success Criteria**:
+- Docker build succeeds
+- Application starts and becomes healthy
+- Health endpoint returns `"status":"UP"`
+
+### Local CI Simulation
+
+Run the same checks locally before pushing:
+
+```bash
+# 1. Code formatting
+./gradlew spotlessCheck
+
+# 2. Unit tests + coverage
+./gradlew unitTest jacocoTestReport
+
+# 3. Integration tests
+./gradlew integrationTest
+
+# 4. Smoke test
+docker compose up --build -d
+curl http://localhost:8080/api/v1/actuator/health
+docker compose down
+```
+
+### Coverage Reporting
+
+The pipeline automatically comments on PRs with coverage summary:
+
+```
+📊 Code Coverage Report
+━━━━━━━━━━━━━━━━━━━━━━━
+✅ Good - Coverage: 94.08%
+```
+
+**Coverage Levels**:
+- ✅ Excellent: ≥80%
+- ✅ Good: ≥70%
+- 🟡 Acceptable: ≥60%
+- 🔴 Needs Improvement: <60%
+
+### Branch Protection
+
+**Recommended Settings**:
+- Require "CI" status check to pass before merging
+- Require branches to be up to date before merging
+- Require pull request reviews
+
+### GitHub Actions Updates
+
+All actions use latest versions with Node.js 24 support:
+- `actions/checkout@v6`
+- `actions/setup-java@v5`
+- `actions/upload-artifact@v7`
+- `actions/github-script@v9`
 
 ## Implementation Guidance
 
