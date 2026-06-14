@@ -1,6 +1,49 @@
 version: '3.8'
 
 services:
+  # ============================================
+  # Application Service
+  # ============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deck-game-service
+    image: deck-game-service:latest
+    ports:
+      - "8080:8080"
+    environment:
+      # Spring Profile
+      - SPRING_PROFILES_ACTIVE=docker
+
+      # Redis Configuration
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+
+      # API Key (can be overridden via .env file)
+      - API_KEY=${API_KEY:-default-api-key-change-me}
+
+      # JVM Options (optional)
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - deck-game-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "com.example.description=Deck Game Service API"
+      - "com.example.version=1.0.0"
+
+  # ============================================
+  # Redis Service
+  # ============================================
   redis:
     image: redis:7.2-alpine
     container_name: deck-game-redis
@@ -8,19 +51,33 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --appendfsync everysec
+    networks:
+      - deck-game-network
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
-      retries: 3
-    networks:
-      - deck-game-network
+      retries: 5
+      start_period: 10s
+    labels:
+      - "com.example.description=Redis data store"
 
+# ============================================
+# Volumes
+# ============================================
 volumes:
   redis-data:
     driver: local
+    labels:
+      - "com.example.description=Redis persistence volume"
 
+# ============================================
+# Networks
+# ============================================
 networks:
   deck-game-network:
     driver: bridge
+    labels:
+      - "com.example.description=Internal network for game services"

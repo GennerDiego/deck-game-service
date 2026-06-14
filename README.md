@@ -5,15 +5,43 @@ A Spring Boot REST API service that implements a poker-style deck of cards game 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Java 17+
-- Docker & Docker Compose
-- Gradle 8.8 (included via wrapper)
+- **Docker & Docker Compose** (recommended - easiest setup)
+- OR Java 17+ and Gradle 8.8 (for local development)
 
-### Running the Application
+### Option 1: Run with Docker (Recommended ⭐)
+
+**Zero setup required!** Just clone and run:
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd deck-game-service
+
+# Start everything (app + Redis)
+docker-compose up
+
+# Or run in background
+docker-compose up -d
+```
+
+**Access the application:**
+- Swagger UI: http://localhost:8080/api/v1/swagger-ui.html
+- API Docs: http://localhost:8080/api/v1/api-docs
+- Health Check: http://localhost:8080/api/v1/actuator/health
+
+**Stop services:**
+```bash
+docker-compose down
+
+# Remove volumes (reset Redis data)
+docker-compose down -v
+```
+
+### Option 2: Run Locally (Development)
 
 1. **Start Redis**
    ```bash
-   docker-compose up -d
+   docker-compose up -d redis
    ```
 
 2. **Build the project**
@@ -67,12 +95,50 @@ src/
 
 ## 🛠️ Development Commands
 
+### Docker Commands
+
+```bash
+# Start all services
+docker-compose up
+
+# Start in background (detached mode)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+docker-compose logs -f app  # Only app logs
+
+# Rebuild after code changes
+docker-compose up --build
+
+# Stop services
+docker-compose down
+
+# Stop and remove volumes (reset Redis)
+docker-compose down -v
+
+# Execute commands inside container
+docker-compose exec app bash
+docker-compose exec app ./gradlew test
+```
+
+### Gradle Commands
+
 ```bash
 # Build
 ./gradlew clean build
 
+# Build without tests
+./gradlew clean build -x test
+
 # Run tests
 ./gradlew test
+
+# Run unit tests only
+./gradlew unitTest
+
+# Run integration tests only
+./gradlew integrationTest
 
 # Run specific test
 ./gradlew test --tests GameServiceTest
@@ -85,6 +151,9 @@ src/
 
 # Pre-commit checks (formatting + tests)
 ./gradlew preCommit
+
+# Run with coverage report
+./gradlew test jacocoTestReport
 ```
 
 ## ✨ Features
@@ -249,6 +318,54 @@ The project includes:
 # View coverage report
 open build/reports/jacoco/test/html/index.html
 ```
+
+## 🐳 Docker Setup
+
+### Architecture
+
+The application uses a **multi-stage Docker build** for optimization:
+
+```
+Stage 1: Builder
+├── gradle:8.8-jdk17-alpine (Build environment)
+├── Compiles source code
+└── Creates JAR artifact
+
+Stage 2: Runtime
+├── eclipse-temurin:17-jre-alpine (Minimal JRE)
+├── Copies JAR from builder
+├── Non-root user (spring:spring)
+└── Final image: ~150MB
+```
+
+### Docker Compose Services
+
+| Service | Image | Port | Description |
+|---------|-------|------|-------------|
+| `app` | deck-game-service:latest | 8080 | Spring Boot application |
+| `redis` | redis:7.2-alpine | 6379 | Data store |
+
+### Environment Variables
+
+Configure via `.env` file (copy from `.env.example`):
+
+```bash
+# API Key for authentication
+API_KEY=your-secure-api-key-here
+
+# JVM Options
+JAVA_OPTS=-Xmx512m -Xms256m
+```
+
+### Health Checks
+
+Both services include health checks:
+- **Application**: `curl http://localhost:8080/api/v1/actuator/health`
+- **Redis**: `redis-cli ping`
+
+### Volumes
+
+- `redis-data`: Persists Redis data between restarts
 
 ## 🔧 Technology Stack
 
