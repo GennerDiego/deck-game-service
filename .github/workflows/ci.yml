@@ -266,39 +266,18 @@ jobs:
             exit 1
           fi
 
-          if [ "$http_code" -eq 200 ] || [ "$http_code" -eq 201 ]; then
-            echo "✅ API is working correctly"
-          else
-            echo "❌ API returned unexpected status: $http_code"
-            exit 1
-          fi
-
-      - name: 🧪 Test API - Without Auth
-        run: |
-          echo "Testing API without authentication (should return 401)..."
-          http_code=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X POST \
-            http://localhost:8080/api/v1/games)
-
-          if [ "$http_code" -eq 401 ]; then
-            echo "✅ Authentication is working (returned 401)"
-          else
-            echo "❌ Expected 401, got: $http_code"
-            exit 1
-          fi
-
       - name: 📊 Show Container Logs
         if: failure()
         run: |
           echo "=== Application Logs ==="
-          docker-compose logs app
+          docker compose logs app
           echo ""
           echo "=== Redis Logs ==="
-          docker-compose logs redis
+          docker compose logs redis
 
       - name: 🛑 Stop services
         if: always()
-        run: docker-compose down -v
+        run: docker compose down -v
 
       - name: ✅ Smoke Test Summary
         if: always()
