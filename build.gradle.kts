@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.2.6"
     id("io.spring.dependency-management") version "1.1.5"
     id("com.diffplug.spotless") version "6.25.0"
+    jacoco
 }
 
 group = "com.cardgame"
@@ -54,6 +55,26 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.70".toBigDecimal()
+            }
+        }
+    }
 }
 
 spotless {
@@ -67,6 +88,30 @@ spotless {
     }
 }
 
+tasks.register("unitTest", Test::class) {
+    description = "Run unit tests only (excludes integration tests)"
+    group = "verification"
+
+    useJUnitPlatform {
+        excludeTags("integration")
+    }
+
+    filter {
+        excludeTestsMatching("*IntegrationTest")
+        excludeTestsMatching("com.cardgame.integration.*")
+    }
+
+    testLogging {
+        events("passed", "skipped", "failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+    }
+
+    finalizedBy(tasks.jacocoTestReport)
+}
+
 tasks.register("preCommit") {
     dependsOn("spotlessApply", "test")
     description = "Run all pre-commit checks (spotless + tests)"
@@ -76,7 +121,9 @@ tasks.register("integrationTest", Test::class) {
     description = "Run integration tests only"
     group = "verification"
 
-    useJUnitPlatform()
+    useJUnitPlatform {
+        includeTags("integration")
+    }
 
     // Performance tuning
     maxHeapSize = "1024m"
@@ -87,6 +134,7 @@ tasks.register("integrationTest", Test::class) {
 
     // Filter by package/class name
     filter {
+        includeTestsMatching("*IntegrationTest")
         includeTestsMatching("com.cardgame.integration.*")
     }
 

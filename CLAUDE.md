@@ -71,29 +71,31 @@ Redis Key Structure:
 - deck:{deckId}                    → Hash (Deck JSON)
 ```
 
-## API Endpoints (Planned)
+## API Endpoints
+
+**Base URL:** `/api/v1`
+
+All endpoints are versioned and prefixed with `/api/v1`. Example: `POST /api/v1/games`
 
 ### Game Management
-- `POST /games` - Create a game
-- `DELETE /games/{gameId}` - Delete a game
+- `POST /api/v1/games` - Create a game
+- `GET /api/v1/games/{gameId}` - Get game details
+- `DELETE /api/v1/games/{gameId}` - Delete a game
 
 ### Deck Management
-- `POST /decks` - Create a standard 52-card deck
-- `POST /games/{gameId}/decks` - Add deck to game's shoe
-- `POST /games/{gameId}/deck/shuffle` - Shuffle the game deck
+- `POST /api/v1/games/{gameId}/decks` - Add deck to game's shoe
+- `POST /api/v1/games/{gameId}/decks/shuffle` - Shuffle the game deck
+- `GET /api/v1/games/{gameId}/decks/suits-count` - Count undealt cards by suit
+- `GET /api/v1/games/{gameId}/decks/cards-count` - Count each remaining card
 
 ### Player Management
-- `POST /games/{gameId}/players` - Add player to game
-- `DELETE /games/{gameId}/players/{playerId}` - Remove player
+- `POST /api/v1/games/{gameId}/players` - Add player to game
+- `DELETE /api/v1/games/{gameId}/players/{playerId}` - Remove player
 
 ### Card Operations
-- `POST /games/{gameId}/players/{playerId}/deal?count=N` - Deal N cards to player
-- `GET /games/{gameId}/players/{playerId}/cards` - List player's cards
-- `GET /games/{gameId}/players/scores` - List all players with scores (sorted)
-
-### Game Deck Queries
-- `GET /games/{gameId}/deck/suits-count` - Count undealt cards by suit
-- `GET /games/{gameId}/deck/cards-count` - Count each remaining card (sorted by suit then value)
+- `POST /api/v1/games/{gameId}/players/{playerId}/deal?count=N` - Deal N cards to player
+- `GET /api/v1/games/{gameId}/players/{playerId}/cards` - List player's cards
+- `GET /api/v1/games/{gameId}/players/scores` - List all players with scores (sorted)
 
 ## Development Workflow Rules
 

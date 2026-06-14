@@ -8,6 +8,8 @@ import com.cardgame.model.dto.PlayerScoreResponse;
 import com.cardgame.model.entity.Card;
 import com.cardgame.model.entity.Game;
 import java.util.*;
+import org.junit.jupiter.api.Tag;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
@@ -23,13 +25,24 @@ import org.springframework.http.*;
  *   <li>Querying game state (scores, counts, etc.)
  * </ul>
  */
+@Tag("integration")
 public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
+
+  @Value("${app.security.api-key}")
+  protected String apiKey;
+
+  protected HttpHeaders createAuthHeaders() {
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("X-API-Key", apiKey);
+    return headers;
+  }
 
   // ==================== GAME OPERATIONS ====================
 
   protected Game createGame() {
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
     ResponseEntity<Game> response =
-        restTemplate.postForEntity(baseUrl + "/games", null, Game.class);
+        restTemplate.exchange(baseUrl + "/games", HttpMethod.POST, request, Game.class);
     assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.CREATED);
     return response.getBody();
   }
@@ -42,8 +55,9 @@ public abstract class BaseIntegrationTest extends AbstractIntegrationTest {
   }
 
   protected void deleteGame(String gameId) {
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
     ResponseEntity<Void> response =
-        restTemplate.exchange(baseUrl + "/games/" + gameId, HttpMethod.DELETE, null, Void.class);
+        restTemplate.exchange(baseUrl + "/games/" + gameId, HttpMethod.DELETE, request, Void.class);
     assertThat(response.getStatusCode()).isIn(HttpStatus.OK, HttpStatus.NO_CONTENT);
   }
 

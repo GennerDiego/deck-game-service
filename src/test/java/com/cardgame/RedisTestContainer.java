@@ -5,7 +5,9 @@ import org.testcontainers.utility.DockerImageName;
 
 /**
  * Singleton Redis container shared across all tests. Starts only once before all tests and reuses
- * the same instance. Automatically stopped and removed when all tests finish.
+ * the same instance. Automatically stopped and removed when JVM exits.
+ *
+ * <p>Uses Testcontainers' Ryuk container for automatic cleanup - no manual shutdown hooks needed.
  */
 public class RedisTestContainer {
 
@@ -17,7 +19,10 @@ public class RedisTestContainer {
   public static GenericContainer<?> getInstance() {
     if (container == null) {
       container =
-          new GenericContainer<>(DockerImageName.parse(REDIS_IMAGE)).withExposedPorts(REDIS_PORT);
+          new GenericContainer<>(DockerImageName.parse(REDIS_IMAGE))
+              .withExposedPorts(REDIS_PORT)
+              .withReuse(false); // Don't reuse between Gradle runs, only within same test execution
+
       container.start();
 
       System.out.println(
@@ -25,20 +30,8 @@ public class RedisTestContainer {
               + container.getHost()
               + ":"
               + container.getFirstMappedPort());
-      System.out.println("🔄 Container will be reused during test execution");
-      System.out.println("🗑️  Container will be stopped and removed after all tests complete");
-
-      // Register shutdown hook to stop container when JVM exits
-      Runtime.getRuntime()
-          .addShutdownHook(
-              new Thread(
-                  () -> {
-                    if (container != null && container.isRunning()) {
-                      System.out.println("🛑 Stopping Redis Testcontainer...");
-                      container.stop();
-                      System.out.println("✅ Redis Testcontainer stopped and removed");
-                    }
-                  }));
+      System.out.println("🔄 Container will be reused across all test classes");
+      System.out.println("🗑️  Container will be cleaned up automatically by Ryuk when JVM exits");
     }
     return container;
   }

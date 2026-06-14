@@ -1,0 +1,30 @@
+app:
+  security:
+    api-key: test-api-key-12345
+
+spring:
+  application:
+    name: deck-game-service-test
+
+  data:
+    redis:
+      # Redis connection properties will be overridden by @DynamicPropertySource in tests
+      timeout: 5000ms
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    time-zone: UTC
+
+logging:
+  level:
+    root: INFO
+    com.cardgame: DEBUG
+    org.springframework.data.redis: INFO
+    # Suppress Lettuce reconnection warnings during Testcontainer shutdown
+    io.lettuce.core.protocol.ConnectionWatchdog: ERROR
+    io.lettuce.core: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
