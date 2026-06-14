@@ -60,6 +60,10 @@ tasks.withType<Test> {
 
 tasks.jacocoTestReport {
     dependsOn(tasks.named("unitTest"))
+
+    // Use execution data from unitTest instead of test
+    executionData.setFrom(files("${layout.buildDirectory.get()}/jacoco/unitTest.exec"))
+
     reports {
         xml.required.set(true)
         html.required.set(true)
