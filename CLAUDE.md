@@ -505,9 +505,12 @@ Use structured logging (JSON format) with fields: `timestamp`, `level`, `logger`
 - Ensures immutability of deck templates
 - Provides isolation between games
 
-### No Authentication in Phase 1
-- Focus on functional requirements first
-- Add Spring Security in future phase
+### API Key Authentication
+- Simple header-based authentication (X-API-Key)
+- Required for POST/DELETE operations (write/destructive actions)
+- GET operations (read-only) do not require authentication
+- Configurable via environment variable (API_KEY)
+- Future enhancement: Spring Security with OAuth2/JWT for production use
 
 ## Reference Documentation
 
