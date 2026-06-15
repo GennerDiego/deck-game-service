@@ -285,6 +285,5 @@ Examples:
 
 ## 📚 Additional Documentation
 
-- **[INTEGRATION_TESTS.md](INTEGRATION_TESTS.md)** - Complete test scenarios and coverage
 - **[CLAUDE.md](CLAUDE.md)** - Project overview and development guidelines
 - **[build.gradle.kts](build.gradle.kts)** - Build configuration and tasks
