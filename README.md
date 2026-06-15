@@ -4,20 +4,11 @@ A Spring Boot REST API service that implements a poker-style deck of cards game 
 
 ## 🚀 Quick Start
 
-> **⚡ TL;DR - Start in 30 seconds:**
-> ```bash
-> docker compose up
-> # Default API Key: default-api-key-change-me
-> # Access: http://localhost:8080/api/v1/swagger-ui.html
-> ```
-
 ### Prerequisites
 - **Docker & Docker Compose** (recommended - easiest setup)
-- OR Java 17+ and Gradle 8.8 (for local development)
+- **Java 17+** and **Gradle 8.8** (required for building)
 
 ### Option 1: Run with Docker (Recommended ⭐)
-
-**Zero setup required!** Just clone and run:
 
 ```bash
 # Clone the repository
@@ -27,12 +18,20 @@ cd deck-game-service
 # Configure API key (optional - defaults to 'default-api-key-change-me')
 echo "API_KEY=my-secret-key" > .env
 
-# Start everything (app + Redis)
-docker compose up
+# Build JAR locally
+./gradlew clean bootJar
 
-# Or run in background
-docker compose up -d
+# Start everything with Docker (app + Redis)
+docker compose up -d --build
 ```
+
+> **⚡ TL;DR - Two commands to start:**
+> ```bash
+> ./gradlew clean bootJar
+> docker compose up -d --build
+> # Default API Key: default-api-key-change-me
+> # Access: http://localhost:8080/api/v1/swagger-ui.html
+> ```
 
 **Access the application:**
 - Swagger UI: http://localhost:8080/api/v1/swagger-ui.html
@@ -114,18 +113,17 @@ src/
 ### Docker Commands
 
 ```bash
-# Start all services
-docker compose up
-
-# Start in background (detached mode)
-docker compose up -d
+# Build JAR and start all services
+./gradlew clean bootJar
+docker compose up -d --build
 
 # View logs
 docker compose logs -f
 docker compose logs -f app  # Only app logs
 
 # Rebuild after code changes
-docker compose up --build
+./gradlew clean bootJar
+docker compose up -d --build
 
 # Stop services
 docker compose down
