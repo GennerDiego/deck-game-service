@@ -2,7 +2,10 @@ package com.cardgame.repository;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +61,24 @@ public abstract class JsonRedisRepository<T> {
     String key = buildKey(id);
     redisTemplate.delete(key);
     log.debug("Deleted {} from Redis: {}", entityType.getSimpleName(), key);
+  }
+
+  public List<T> findAll() {
+    Set<String> keys = redisTemplate.keys(getKeyPrefix() + "*");
+    if (keys == null || keys.isEmpty()) {
+      return new ArrayList<>();
+    }
+
+    List<T> entities = new ArrayList<>();
+    for (String key : keys) {
+      String json = redisTemplate.opsForValue().get(key);
+      if (json != null) {
+        entities.add(fromJson(json));
+      }
+    }
+
+    log.debug("Loaded {} {} from Redis", entities.size(), entityType.getSimpleName());
+    return entities;
   }
 
   private String buildKey(String id) {

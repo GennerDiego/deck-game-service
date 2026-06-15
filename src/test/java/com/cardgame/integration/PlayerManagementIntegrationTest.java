@@ -55,7 +55,7 @@ class PlayerManagementIntegrationTest extends BaseIntegrationTest {
   void removePlayer_whenPlayerExists_removesPlayerAndMovesCardsToDiscard() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Alice");
 
     // Deal 5 cards to player

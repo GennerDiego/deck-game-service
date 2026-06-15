@@ -27,8 +27,8 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getPlayerScores_withMultiplePlayers_returnsSortedByTotalValueDescending() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
 
       String playerA = addPlayer(game.getId(), "Alice");
       String playerB = addPlayer(game.getId(), "Bob");
@@ -75,10 +75,10 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getPlayerScores_usesCorrectFaceValues() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
 
       String playerId = addPlayer(game.getId(), "TestPlayer");
       dealCards(game.getId(), playerId, 20);
@@ -108,7 +108,7 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getSuitCounts_withFullDeck_returns13PerSuit() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
 
       // When
       Map<String, Integer> suitCounts = getSuitCounts(game.getId());
@@ -126,7 +126,7 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getSuitCounts_afterDealingCards_returnsRemainingCounts() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
       String playerId = addPlayer(game.getId(), "Alice");
 
       dealCards(game.getId(), playerId, 10);
@@ -146,7 +146,7 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getSuitCounts_whenDeckIsEmpty_returnsAllZeros() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
       String playerId = addPlayer(game.getId(), "Alice");
 
       dealCards(game.getId(), playerId, 52);
@@ -167,8 +167,8 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getSuitCounts_withMultipleDecks_returnsCombinedCounts() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
 
       // When
       Map<String, Integer> suitCounts = getSuitCounts(game.getId());
@@ -191,7 +191,7 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getCardCounts_withFullDeck_returnsSortedBySuitAndValue() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
 
       // When
       Map<String, Integer> cardCounts = getCardCounts(game.getId());
@@ -206,9 +206,9 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getCardCounts_withMultipleDecks_showsDuplicateCounts() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
 
       // When
       Map<String, Integer> cardCounts = getCardCounts(game.getId());
@@ -223,8 +223,8 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getCardCounts_afterDealingSomeCards_reflectsRemainingCards() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
 
       String playerId = addPlayer(game.getId(), "Alice");
       dealCards(game.getId(), playerId, 50);
@@ -242,7 +242,7 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getCardCounts_whenDeckIsEmpty_returnsEmptyMap() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
       String playerId = addPlayer(game.getId(), "Alice");
 
       dealCards(game.getId(), playerId, 52);
@@ -264,7 +264,7 @@ class QueryOperationsIntegrationTest extends BaseIntegrationTest {
     void getPlayerCards_whenPlayerHasCards_returnsAllCards() {
       // Given
       Game game = createGame();
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
       String playerId = addPlayer(game.getId(), "Alice");
 
       List<Card> dealtCards = dealCards(game.getId(), playerId, 5);

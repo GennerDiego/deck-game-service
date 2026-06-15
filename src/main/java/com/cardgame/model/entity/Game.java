@@ -48,6 +48,10 @@ public class Game implements Serializable {
   @Builder.Default
   private int totalDecksAdded = 0;
 
+  @JsonProperty("deckIdsInUse")
+  @Builder.Default
+  private Set<String> deckIdsInUse = new HashSet<>();
+
   @Builder.Default private Instant createdAt = Instant.now();
 
   public static Game createNew() {
@@ -56,6 +60,7 @@ public class Game implements Serializable {
 
   public void addDeck(Deck deck) {
     this.gameDeck.addAll(deck.getCards());
+    this.deckIdsInUse.add(deck.getId());
     this.totalDecksAdded++;
   }
 

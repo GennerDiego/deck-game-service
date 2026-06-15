@@ -24,7 +24,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_withCount1_dealsSingleCard() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Alice");
 
     // When
@@ -46,7 +46,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_withCountN_dealsNCards() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Bob");
 
     // When
@@ -67,7 +67,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_afterShuffle_dealsAll52CardsInRandomOrder() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Alice");
 
     // When - Shuffle then deal 52 times
@@ -111,7 +111,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_whenDeckIsEmpty_returnsNoCards() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Alice");
 
     // Deal all 52 cards
@@ -138,7 +138,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_whenRequestingMoreThanAvailable_dealsOnlyAvailableCards() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Bob");
 
     // Deal 47 cards first, leaving 5
@@ -162,7 +162,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_withNegativeOrZeroCount_returns400BadRequest() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Alice");
 
     // When - Count = 0
@@ -183,7 +183,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_whenPlayerDoesNotExist_returns404() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String invalidPlayerId = "invalid-player-id";
 
     // When
@@ -203,9 +203,9 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void dealCards_withMultipleDecks_dealsFromCombinedShoe() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
-    addDeckToGame(game.getId());
-    addDeckToGame(game.getId()); // 3 decks = 156 cards
+    createAndAddDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId()); // 3 decks = 156 cards
 
     String playerId = addPlayer(game.getId(), "Alice");
 
@@ -227,7 +227,7 @@ class DealCardsIntegrationTest extends BaseIntegrationTest {
   void shuffleGameDeck_afterDealingCards_shufflesOnlyRemainingCards() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
     String playerId = addPlayer(game.getId(), "Alice");
 
     // Deal 10 cards
