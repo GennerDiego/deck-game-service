@@ -184,6 +184,36 @@ public class DeckOperationsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @DisplayName("Should return 409 when adding same deck twice to same game")
+  void addDeckToGame_whenDeckAlreadyAdded_returns409() {
+    // Given
+    Game game = createGame();
+    Deck deck = createDeck();
+
+    // Add deck first time (should succeed)
+    addDeckToGame(game.getId(), deck.getId());
+
+    // When - Try to add same deck again
+    HttpEntity<Void> request = new HttpEntity<>(createAuthHeaders());
+    ResponseEntity<String> response =
+        restTemplate.exchange(
+            baseUrl + "/games/" + game.getId() + "/deck/" + deck.getId(),
+            HttpMethod.POST,
+            request,
+            String.class);
+
+    // Then
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+    assertThat(response.getBody()).contains("already added");
+    assertThat(response.getBody()).contains(deck.getId());
+
+    // Verify game still has only 52 cards (one deck)
+    Game updatedGame = getGame(game.getId());
+    assertThat(updatedGame.getCardsRemaining()).isEqualTo(52);
+    assertThat(updatedGame.getTotalDecksAdded()).isEqualTo(1);
+  }
+
+  @Test
   @DisplayName(
       "[COMPLIANCE] Should allow deck deletion after game is deleted (deck no longer in use)")
   void deleteDeck_afterGameDeleted_allowsDeletion() {

@@ -1,5 +1,6 @@
 package com.cardgame.model.entity;
 
+import com.cardgame.exception.DeckAlreadyAddedException;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,11 +21,14 @@ import lombok.NoArgsConstructor;
 @JsonPropertyOrder({
   "id",
   "totalCardsInDeck",
+  "deckIdsInUse",
   "cardsRemaining",
-  "discardedCards",
+  "cardsDiscarded",
   "totalDecksAdded",
+  "playersRemoved",
   "createdAt",
-  "deck",
+  "shoe",
+  "discardedCards",
   "players"
 })
 public class Game implements Serializable {
@@ -32,7 +36,7 @@ public class Game implements Serializable {
   @JsonProperty("id")
   private String id;
 
-  @JsonProperty("deck")
+  @JsonProperty("shoe")
   @Builder.Default
   private List<Card> gameDeck = new ArrayList<>();
 
@@ -40,13 +44,17 @@ public class Game implements Serializable {
   @Builder.Default
   private List<Player> players = new ArrayList<>();
 
-  //  @JsonProperty("discardedCards")
-  //  @Builder.Default
-  //  private List<Card> discardedCards = new ArrayList<>();
+  @JsonProperty("discardedCards")
+  @Builder.Default
+  private List<Card> discardedCards = new ArrayList<>();
 
   @JsonProperty("totalDecksAdded")
   @Builder.Default
   private int totalDecksAdded = 0;
+
+  @JsonProperty("playersRemoved")
+  @Builder.Default
+  private int playersRemoved = 0;
 
   @JsonProperty("deckIdsInUse")
   @Builder.Default
@@ -59,6 +67,9 @@ public class Game implements Serializable {
   }
 
   public void addDeck(Deck deck) {
+    if (this.deckIdsInUse.contains(deck.getId())) {
+      throw new DeckAlreadyAddedException(deck.getId(), this.id);
+    }
     this.gameDeck.addAll(deck.getCards());
     this.deckIdsInUse.add(deck.getId());
     this.totalDecksAdded++;
@@ -72,8 +83,9 @@ public class Game implements Serializable {
     Player player = getPlayer(playerId);
     if (player != null) {
       // Move player's cards to discarded pile
-      //      this.discardedCards.addAll(player.getCards());
+      this.discardedCards.addAll(player.getCards());
       this.players.remove(player);
+      this.playersRemoved++;
     }
   }
 
@@ -98,5 +110,10 @@ public class Game implements Serializable {
   @JsonProperty("cardsRemaining")
   public int getCardsRemaining() {
     return gameDeck.size();
+  }
+
+  @JsonProperty("cardsDiscarded")
+  public int getCardsDiscarded() {
+    return discardedCards.size();
   }
 }

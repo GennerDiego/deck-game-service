@@ -150,6 +150,46 @@ class GlobalExceptionHandlerTest {
   }
 
   @Nested
+  @DisplayName("handleDeckAlreadyAdded()")
+  class HandleDeckAlreadyAddedTests {
+
+    @Test
+    @DisplayName("Should return 409 conflict when deck already added")
+    void shouldReturn409ConflictWhenDeckAlreadyAdded() {
+      DeckAlreadyAddedException exception = new DeckAlreadyAddedException("deck-123", "game-456");
+
+      ResponseEntity<ErrorResponse> response =
+          exceptionHandler.handleDeckAlreadyAdded(exception, request);
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+      assertThat(response.getBody()).isNotNull();
+      assertThat(response.getBody().getStatus()).isEqualTo(409);
+      assertThat(response.getBody().getError()).isEqualTo("Conflict");
+      assertThat(response.getBody().getMessage()).contains("deck-123");
+      assertThat(response.getBody().getMessage()).contains("game-456");
+    }
+  }
+
+  @Nested
+  @DisplayName("handleDeckInUse()")
+  class HandleDeckInUseTests {
+
+    @Test
+    @DisplayName("Should return 409 conflict when deck is in use")
+    void shouldReturn409ConflictWhenDeckInUse() {
+      DeckInUseException exception = new DeckInUseException("deck-123");
+
+      ResponseEntity<ErrorResponse> response = exceptionHandler.handleDeckInUse(exception, request);
+
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+      assertThat(response.getBody()).isNotNull();
+      assertThat(response.getBody().getStatus()).isEqualTo(409);
+      assertThat(response.getBody().getError()).isEqualTo("Conflict");
+      assertThat(response.getBody().getMessage()).contains("deck-123");
+    }
+  }
+
+  @Nested
   @DisplayName("handleUnauthorized()")
   class HandleUnauthorizedTests {
 

@@ -1,0 +1,45 @@
+meta {
+  name: Get Player IDs (Helper)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/games/{{gameId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should have players", function() {
+    expect(res.body.players).to.be.an('array');
+  });
+}
+
+docs {
+  Helper request to view all players and their IDs.
+
+  After executing this request:
+  1. Look at the response body
+  2. Find your player in the "players" array
+  3. Copy the "id" value
+  4. Go to Settings → Environment → Local
+  5. Set playerId = <copied_id>
+
+  Example response:
+  {
+    "id": "game-123",
+    "players": [
+      { "id": "player-abc", "name": "Alice" },
+      { "id": "player-def", "name": "Bob" },
+      { "id": "player-ghi", "name": "Charlie" }
+    ]
+  }
+
+  To use Alice: playerId = player-abc
+  To use Bob: playerId = player-def
+}

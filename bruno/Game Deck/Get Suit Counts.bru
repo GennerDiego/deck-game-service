@@ -1,0 +1,32 @@
+meta {
+  name: Get Suit Counts
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/games/{{gameId}}/deck/suits-count
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should return object with suit counts", function() {
+    expect(res.body).to.be.an('object');
+  });
+
+  test("should have valid suits", function() {
+    const validSuits = ['HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'];
+    Object.keys(res.body).forEach(suit => {
+      expect(validSuits).to.include(suit);
+    });
+  });
+}
+
+docs {
+  Returns the count of undealt cards grouped by suit in the game's shoe.
+}

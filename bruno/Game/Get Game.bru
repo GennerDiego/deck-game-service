@@ -1,0 +1,25 @@
+meta {
+  name: Get Game
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/games/{{gameId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should have game id", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("gameId"));
+  });
+
+  test("should have players array", function() {
+    expect(res.body.players).to.be.an('array');
+  });
+}

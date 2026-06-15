@@ -1,0 +1,26 @@
+meta {
+  name: Get Card Counts
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/games/{{gameId}}/deck/cards-count
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should return object with card counts", function() {
+    expect(res.body).to.be.an('object');
+  });
+}
+
+docs {
+  Returns the count of each specific undealt card (e.g., ACE of HEARTS) in the game's shoe.
+  Each key is in format "RANK of SUIT" (e.g., "ACE of HEARTS", "KING of SPADES").
+}

@@ -159,9 +159,76 @@ class PlayerServiceTest {
 
       // Then
       assertThat(game.getPlayers()).isEmpty();
+      assertThat(game.getPlayersRemoved()).isEqualTo(1);
+      assertThat(game.getDiscardedCards()).isEmpty(); // Player had no cards
 
       verify(gameService, times(1)).findById(gameId);
       verify(gameRepository, times(1)).save(game);
+    }
+
+    @Test
+    @DisplayName("Should move player's cards to discard pile when removing player")
+    void removePlayer_whenPlayerHasCards_movesCardsToDiscardPile() {
+      // Given
+      String gameId = "game-123";
+      Player player = Player.createNew("Alice");
+      String playerId = player.getId();
+      Game game = Game.createNew();
+      game.addPlayer(player);
+      game.addDeck(Deck.createNew());
+
+      // Deal 5 cards to player
+      for (int i = 0; i < 5; i++) {
+        player.getCards().add(game.getGameDeck().remove(0));
+      }
+
+      when(gameService.findById(gameId)).thenReturn(game);
+      when(gameRepository.save(any(Game.class))).thenReturn(game);
+
+      // When
+      playerService.removePlayer(gameId, playerId);
+
+      // Then
+      assertThat(game.getPlayers()).isEmpty();
+      assertThat(game.getPlayersRemoved()).isEqualTo(1);
+      assertThat(game.getDiscardedCards()).hasSize(5);
+      assertThat(game.getCardsDiscarded()).isEqualTo(5);
+
+      verify(gameService, times(1)).findById(gameId);
+      verify(gameRepository, times(1)).save(game);
+    }
+
+    @Test
+    @DisplayName("Should accumulate discarded cards when removing multiple players")
+    void removePlayer_whenMultiplePlayersRemoved_accumulatesDiscardedCards() {
+      // Given
+      String gameId = "game-123";
+      Player alice = Player.createNew("Alice");
+      Player bob = Player.createNew("Bob");
+      Game game = Game.createNew();
+      game.addPlayer(alice);
+      game.addPlayer(bob);
+      game.addDeck(Deck.createNew());
+
+      // Deal cards to both players
+      for (int i = 0; i < 3; i++) alice.getCards().add(game.getGameDeck().remove(0));
+      for (int i = 0; i < 7; i++) bob.getCards().add(game.getGameDeck().remove(0));
+
+      when(gameService.findById(gameId)).thenReturn(game);
+      when(gameRepository.save(any(Game.class))).thenReturn(game);
+
+      // When - Remove both players
+      playerService.removePlayer(gameId, alice.getId());
+      playerService.removePlayer(gameId, bob.getId());
+
+      // Then
+      assertThat(game.getPlayers()).isEmpty();
+      assertThat(game.getPlayersRemoved()).isEqualTo(2);
+      assertThat(game.getDiscardedCards()).hasSize(10); // 3 + 7
+      assertThat(game.getCardsDiscarded()).isEqualTo(10);
+
+      verify(gameService, times(2)).findById(gameId);
+      verify(gameRepository, times(2)).save(game);
     }
 
     @Test

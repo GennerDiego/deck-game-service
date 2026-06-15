@@ -1,0 +1,21 @@
+meta {
+  name: Delete Game
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/games/{{gameId}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should return 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}

@@ -67,7 +67,37 @@ class PlayerManagementIntegrationTest extends BaseIntegrationTest {
     // Then
     Game updatedGame = getGame(game.getId());
     assertThat(updatedGame.getPlayers()).isEmpty();
-    //    assertThat(updatedGame.getDiscardedCards()).hasSize(5);
+    assertThat(updatedGame.getDiscardedCards()).hasSize(5);
+    assertThat(updatedGame.getPlayersRemoved()).isEqualTo(1);
+    assertThat(updatedGame.getCardsDiscarded()).isEqualTo(5);
+  }
+
+  @Test
+  @DisplayName("Should track multiple player removals and accumulate discarded cards")
+  void removePlayer_whenMultiplePlayersRemoved_tracksCountersCorrectly() {
+    // Given
+    Game game = createGame();
+    createAndAddDeckToGame(game.getId());
+    String player1Id = addPlayer(game.getId(), "Alice");
+    String player2Id = addPlayer(game.getId(), "Bob");
+    String player3Id = addPlayer(game.getId(), "Charlie");
+
+    // Deal cards to players
+    dealCards(game.getId(), player1Id, 3);
+    dealCards(game.getId(), player2Id, 5);
+    dealCards(game.getId(), player3Id, 2);
+
+    // When - Remove two players
+    removePlayer(game.getId(), player1Id);
+    removePlayer(game.getId(), player3Id);
+
+    // Then
+    Game updatedGame = getGame(game.getId());
+    assertThat(updatedGame.getPlayers()).hasSize(1);
+    assertThat(updatedGame.getPlayers().get(0).getName()).isEqualTo("Bob");
+    assertThat(updatedGame.getPlayersRemoved()).isEqualTo(2);
+    assertThat(updatedGame.getCardsDiscarded()).isEqualTo(5); // 3 + 2 cards
+    assertThat(updatedGame.getDiscardedCards()).hasSize(5);
   }
 
   @Test

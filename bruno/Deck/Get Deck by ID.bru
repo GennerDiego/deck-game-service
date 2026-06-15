@@ -1,0 +1,25 @@
+meta {
+  name: Get Deck by ID
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/decks/{{deckId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should have deck id", function() {
+    expect(res.body.id).to.equal(bru.getEnvVar("deckId"));
+  });
+
+  test("should have cards array", function() {
+    expect(res.body.cards).to.be.an('array');
+  });
+}

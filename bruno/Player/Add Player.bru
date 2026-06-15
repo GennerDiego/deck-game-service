@@ -1,0 +1,39 @@
+meta {
+  name: Add Player
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/games/{{gameId}}/players
+  body: json
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Alice"
+  }
+}
+
+tests {
+  test("should return 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}
+
+docs {
+  After adding a player, you need to get the playerId:
+
+  1. Execute: Game/Get Game
+  2. Find the player in the "players" array
+  3. Copy the "id" field
+  4. Manually set playerId in environment variables
+
+  Or use the "Get Game and Extract Player ID" request helper.
+}

@@ -205,6 +205,34 @@ class DeckServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw DeckAlreadyAddedException when same deck added twice")
+    void addDeckToGame_whenDeckAlreadyAdded_throwsException() {
+      // Given
+      String gameId = "game-123";
+      String deckId = "deck-456";
+
+      Game game = Game.createNew();
+      Deck deck = Deck.createNew();
+      deck.setId(deckId);
+
+      when(gameService.findById(gameId)).thenReturn(game);
+      when(deckRepository.findById(deckId)).thenReturn(Optional.of(deck));
+      when(gameRepository.save(any(Game.class))).thenReturn(game);
+
+      // When - Add deck first time (should succeed)
+      deckService.addDeckToGame(gameId, deckId);
+
+      // Then - Add same deck second time (should fail)
+      assertThatThrownBy(() -> deckService.addDeckToGame(gameId, deckId))
+          .isInstanceOf(com.cardgame.exception.DeckAlreadyAddedException.class)
+          .hasMessageContaining(deckId)
+          .hasMessageContaining(game.getId());
+
+      // Verify deck was only saved once
+      verify(gameRepository, times(1)).save(game);
+    }
+
+    @Test
     @DisplayName("Should throw GameNotFoundException when game does not exist")
     void addDeckToGame_whenGameNotFound_throwsException() {
       // Given

@@ -1,0 +1,28 @@
+meta {
+  name: Get Player Cards
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/games/{{gameId}}/players/{{playerId}}/cards
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should return array of cards", function() {
+    expect(res.body).to.be.an('array');
+  });
+
+  test("each card should have suit and rank", function() {
+    res.body.forEach(card => {
+      expect(card).to.have.property('suit');
+      expect(card).to.have.property('rank');
+    });
+  });
+}
