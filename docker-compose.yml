@@ -49,9 +49,8 @@ services:
     container_name: deck-game-redis
     ports:
       - "6379:6379"
-    volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes --appendfsync everysec
+    # No volumes - data is ephemeral, lost on container restart
+    command: redis-server --save "" --appendonly no
     networks:
       - deck-game-network
     restart: unless-stopped
@@ -62,16 +61,7 @@ services:
       retries: 5
       start_period: 10s
     labels:
-      - "com.example.description=Redis data store"
-
-# ============================================
-# Volumes
-# ============================================
-volumes:
-  redis-data:
-    driver: local
-    labels:
-      - "com.example.description=Redis persistence volume"
+      - "com.example.description=Redis data store (ephemeral)"
 
 # ============================================
 # Networks
