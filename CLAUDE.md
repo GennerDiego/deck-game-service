@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > **🚀 Run Application:**
 > ```bash
-> docker compose up
+> ./gradlew clean bootJar
+> docker compose up -d --build
 > ```
 > 
 > **🔑 Default API Key**: `default-api-key-change-me`
@@ -272,8 +273,11 @@ chore(deps): update Spring Boot to 3.2.0
 # Configure API key (optional)
 echo "API_KEY=my-dev-key" > .env
 
+# Build JAR locally
+./gradlew clean bootJar
+
 # Start everything (app + Redis)
-docker compose up -d
+docker compose up -d --build
 
 # View logs
 docker compose logs -f
@@ -282,7 +286,7 @@ docker compose logs -f
 docker compose down
 ```
 
-**Option 2: Local Development**
+**Option 2: Local Development (Without Docker for App)**
 ```bash
 # Start Redis only
 docker compose up -d redis
