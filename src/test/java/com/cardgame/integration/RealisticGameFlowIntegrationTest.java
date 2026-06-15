@@ -26,7 +26,7 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
     assertThat(game.getCardsRemaining()).isEqualTo(0);
 
     // When - Add deck
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
 
     Game gameWithDeck = getGame(game.getId());
     assertThat(gameWithDeck.getTotalCardsInDeck()).isEqualTo(52);
@@ -89,7 +89,7 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
     Game game = createGame();
 
     for (int i = 0; i < 6; i++) {
-      addDeckToGame(game.getId());
+      createAndAddDeckToGame(game.getId());
     }
 
     Game gameWithShoe = getGame(game.getId());
@@ -157,8 +157,8 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
   void completeGameLifecycle_createPlayPlayerLeavesCleanup() {
     // Given - Create game and setup
     Game game = createGame();
-    addDeckToGame(game.getId());
-    addDeckToGame(game.getId()); // 2 decks = 104 cards
+    createAndAddDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId()); // 2 decks = 104 cards
 
     String player1 = addPlayer(game.getId(), "Alice");
     String player2 = addPlayer(game.getId(), "Bob");
@@ -235,7 +235,7 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
   void drawAllCardsScenario_dealUntilDeckExhausted() {
     // Given - Small deck for exhaustion test
     Game game = createGame();
-    addDeckToGame(game.getId()); // 52 cards
+    createAndAddDeckToGame(game.getId()); // 52 cards
 
     String player1 = addPlayer(game.getId(), "Alice");
     String player2 = addPlayer(game.getId(), "Bob");
@@ -282,7 +282,7 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
   void progressiveShuffle_shuffleAtDifferentStages() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
 
     String player = addPlayer(game.getId(), "Alice");
 
@@ -290,8 +290,8 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
     shuffleDeck(game.getId());
 
     // Add deck after shuffle
-    addDeckToGame(game.getId());
-    addDeckToGame(game.getId()); // Total: 156 cards (3 decks)
+    createAndAddDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId()); // Total: 156 cards (3 decks)
 
     // Shuffle 2 - Full shoe
     shuffleDeck(game.getId());
@@ -330,8 +330,8 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
   void queryOperationsMidGame_verifyQueriesDuringActiveGame() {
     // Given - Setup active game
     Game game = createGame();
-    addDeckToGame(game.getId());
-    addDeckToGame(game.getId()); // 104 cards
+    createAndAddDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId()); // 104 cards
 
     String player1 = addPlayer(game.getId(), "Alice");
     String player2 = addPlayer(game.getId(), "Bob");

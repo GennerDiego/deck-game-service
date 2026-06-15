@@ -255,8 +255,8 @@ All **GET** operations are public:
 - `GET /api/v1/games/{gameId}`
 - `GET /api/v1/games/{gameId}/players/{playerId}/cards`
 - `GET /api/v1/games/{gameId}/players/scores`
-- `GET /api/v1/games/{gameId}/decks/suits-count`
-- `GET /api/v1/games/{gameId}/decks/cards-count`
+- `GET /api/v1/games/{gameId}/deck/suits-count`
+- `GET /api/v1/games/{gameId}/deck/cards-count`
 
 ## 📡 API Endpoints
 
@@ -278,19 +278,34 @@ Header: X-API-Key: your-api-key
 ### Deck Management
 
 ```bash
-# Add deck to game (requires API key)
-POST /api/v1/games/{gameId}/decks
+# Create a new deck (requires API key)
+POST /api/v1/decks
+Header: X-API-Key: your-api-key
+Response: { "id": "deck-456", "cards": [...], "createdAt": "..." }
+
+# Get all decks (public)
+GET /api/v1/decks
+
+# Get deck by ID (public)
+GET /api/v1/decks/{deckId}
+
+# Delete a deck - only if not in use by any game (requires API key)
+DELETE /api/v1/decks/{deckId}
 Header: X-API-Key: your-api-key
 
-# Shuffle game deck (requires API key)
-POST /api/v1/games/{gameId}/decks/shuffle
+# Add existing deck to game shoe (requires API key)
+POST /api/v1/games/{gameId}/deck/{deckId}
+Header: X-API-Key: your-api-key
+
+# Shuffle game deck/shoe (requires API key)
+POST /api/v1/games/{gameId}/deck/shuffle
 Header: X-API-Key: your-api-key
 
 # Count undealt cards by suit (public)
-GET /api/v1/games/{gameId}/decks/suits-count
+GET /api/v1/games/{gameId}/deck/suits-count
 
 # Count each remaining card (public)
-GET /api/v1/games/{gameId}/decks/cards-count
+GET /api/v1/games/{gameId}/deck/cards-count
 ```
 
 ### Player Management
@@ -331,33 +346,43 @@ curl -X POST http://localhost:8080/api/v1/games \
   -H "X-API-Key: $API_KEY"
 # Response: { "id": "game-123", ... }
 
-# 2. Add deck to game
-curl -X POST http://localhost:8080/api/v1/games/game-123/decks \
+# 2. Create a deck
+curl -X POST http://localhost:8080/api/v1/decks \
+  -H "X-API-Key: $API_KEY"
+# Response: { "id": "deck-456", "cards": [...], "createdAt": "..." }
+
+# 3. Add deck to game's shoe
+curl -X POST http://localhost:8080/api/v1/games/game-123/deck/deck-456 \
   -H "X-API-Key: $API_KEY"
 
-# 3. Add a player
+# 4. Add a player
 curl -X POST http://localhost:8080/api/v1/games/game-123/players \
   -H "X-API-Key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"name": "Alice"}'
 
-# 4. Get game to retrieve player ID
+# 5. Get game to retrieve player ID
 curl -X GET http://localhost:8080/api/v1/games/game-123
 # Response includes players array with IDs
 
-# 5. Shuffle the deck
-curl -X POST http://localhost:8080/api/v1/games/game-123/decks/shuffle \
+# 6. Shuffle the deck/shoe
+curl -X POST http://localhost:8080/api/v1/games/game-123/deck/shuffle \
   -H "X-API-Key: $API_KEY"
 
-# 6. Deal 5 cards to Alice
+# 7. Deal 5 cards to Alice
 curl -X POST "http://localhost:8080/api/v1/games/game-123/players/player-789/deal?count=5" \
   -H "X-API-Key: $API_KEY"
 
-# 7. View Alice's cards (public endpoint - no API key)
+# 8. View Alice's cards (public endpoint - no API key)
 curl -X GET http://localhost:8080/api/v1/games/game-123/players/player-789/cards
 
-# 8. View player rankings (public endpoint - no API key)
+# 9. View player rankings (public endpoint - no API key)
 curl -X GET http://localhost:8080/api/v1/games/game-123/players/scores
+
+# 10. Delete deck (only works if not in use by any game)
+curl -X DELETE http://localhost:8080/api/v1/decks/deck-456 \
+  -H "X-API-Key: $API_KEY"
+# Returns 409 Conflict if deck is in use by a game
 ```
 
 ## 📋 Implementation Status

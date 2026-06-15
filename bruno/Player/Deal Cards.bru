@@ -1,0 +1,39 @@
+meta {
+  name: Deal Cards
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/games/{{gameId}}/players/{{playerId}}/deal?count=5
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+params:query {
+  count: 5
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should return array of cards", function() {
+    expect(res.body).to.be.an('array');
+  });
+
+  test("should deal requested number of cards", function() {
+    expect(res.body).to.have.lengthOf.at.most(5);
+  });
+}
+
+docs {
+  Deals specified number of cards to a player.
+  If fewer cards available, returns only available cards.
+  Change the count parameter to deal different number of cards.
+}

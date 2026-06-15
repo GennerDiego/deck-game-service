@@ -2,6 +2,7 @@ package com.cardgame.integration;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.cardgame.model.entity.Deck;
 import com.cardgame.model.entity.Game;
 import com.cardgame.model.entity.Rank;
 import com.cardgame.model.entity.Suit;
@@ -22,15 +23,17 @@ class DeckManagementIntegrationTest extends BaseIntegrationTest {
   void addDeckToGame_whenGameHasNoDecks_adds52Cards() {
     // Given
     Game game = createGame();
+    Deck deck = createDeck();
 
     // When
-    addDeckToGame(game.getId());
+    addDeckToGame(game.getId(), deck.getId());
 
     // Then
     Game updatedGame = getGame(game.getId());
     assertThat(updatedGame.getTotalCardsInDeck()).isEqualTo(52);
     assertThat(updatedGame.getCardsRemaining()).isEqualTo(52);
     assertThat(updatedGame.getTotalDecksAdded()).isEqualTo(1);
+    assertThat(updatedGame.getDeckIdsInUse()).contains(deck.getId());
   }
 
   @Test
@@ -38,30 +41,38 @@ class DeckManagementIntegrationTest extends BaseIntegrationTest {
   void addDeckToGame_whenGameAlreadyHasDecks_appendsNewDeck() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
-    addDeckToGame(game.getId());
-    addDeckToGame(game.getId());
+    Deck deck1 = createDeck();
+    Deck deck2 = createDeck();
+    Deck deck3 = createDeck();
+
+    addDeckToGame(game.getId(), deck1.getId());
+    addDeckToGame(game.getId(), deck2.getId());
+    addDeckToGame(game.getId(), deck3.getId());
 
     // When
-    addDeckToGame(game.getId());
+    Deck deck4 = createDeck();
+    addDeckToGame(game.getId(), deck4.getId());
 
     // Then
     Game updatedGame = getGame(game.getId());
     assertThat(updatedGame.getTotalCardsInDeck()).isEqualTo(208); // 4 decks × 52
     assertThat(updatedGame.getCardsRemaining()).isEqualTo(208);
     assertThat(updatedGame.getTotalDecksAdded()).isEqualTo(4);
+    assertThat(updatedGame.getDeckIdsInUse())
+        .containsExactlyInAnyOrder(deck1.getId(), deck2.getId(), deck3.getId(), deck4.getId());
   }
 
   @Test
-  @DisplayName("Should return 404 when adding deck to non-existent game")
-  void addDeckToGame_whenGameDoesNotExist_returns404() {
+  @DisplayName("Should return 404 when adding non-existent deck to game")
+  void addDeckToGame_whenDeckDoesNotExist_returns404() {
     // Given
-    String invalidGameId = "invalid-game-id";
+    Game game = createGame();
+    String invalidDeckId = "invalid-deck-id";
 
     // When
     ResponseEntity<Map<String, Object>> response =
         restTemplate.exchange(
-            baseUrl + "/games/" + invalidGameId + "/decks",
+            baseUrl + "/games/" + game.getId() + "/deck/" + invalidDeckId,
             HttpMethod.POST,
             new HttpEntity<>(createAuthHeaders()),
             new ParameterizedTypeReference<>() {});
@@ -75,7 +86,8 @@ class DeckManagementIntegrationTest extends BaseIntegrationTest {
   void addDeckToGame_createsStandardDeck_withAllRanksAndSuits() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    Deck deck = createDeck();
+    addDeckToGame(game.getId(), deck.getId());
 
     // When
     Map<String, Integer> cardCounts = getCardCounts(game.getId());
@@ -111,7 +123,7 @@ class DeckManagementIntegrationTest extends BaseIntegrationTest {
   void shuffleGameDeck_whenDeckHasCards_randomizesOrder() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
 
     Map<String, Integer> initialCardCounts = getCardCounts(game.getId());
 
@@ -131,7 +143,7 @@ class DeckManagementIntegrationTest extends BaseIntegrationTest {
   void shuffleGameDeck_whenCalledMultipleTimes_producesRandomResults() {
     // Given
     Game game = createGame();
-    addDeckToGame(game.getId());
+    createAndAddDeckToGame(game.getId());
 
     // When - Shuffle 5 times
     for (int i = 0; i < 5; i++) {

@@ -1,0 +1,26 @@
+meta {
+  name: Shuffle Game Deck
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/games/{{gameId}}/deck/shuffle
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should return 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}
+
+docs {
+  Shuffles the remaining cards in the game's shoe using Fisher-Yates algorithm.
+  Already dealt cards are not affected.
+}

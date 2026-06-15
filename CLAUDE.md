@@ -96,10 +96,14 @@ All endpoints are versioned and prefixed with `/api/v1`. Example: `POST /api/v1/
 - `DELETE /api/v1/games/{gameId}` - Delete a game
 
 ### Deck Management
-- `POST /api/v1/games/{gameId}/decks` - Add deck to game's shoe
-- `POST /api/v1/games/{gameId}/decks/shuffle` - Shuffle the game deck
-- `GET /api/v1/games/{gameId}/decks/suits-count` - Count undealt cards by suit
-- `GET /api/v1/games/{gameId}/decks/cards-count` - Count each remaining card
+- `POST /api/v1/decks` - Create a new deck (standalone)
+- `GET /api/v1/decks` - Get all decks
+- `GET /api/v1/decks/{deckId}` - Get deck by ID
+- `DELETE /api/v1/decks/{deckId}` - Delete deck (only if not in use by any game)
+- `POST /api/v1/games/{gameId}/deck/{deckId}` - Add existing deck to game's shoe
+- `POST /api/v1/games/{gameId}/deck/shuffle` - Shuffle the game deck
+- `GET /api/v1/games/{gameId}/deck/suits-count` - Count undealt cards by suit
+- `GET /api/v1/games/{gameId}/deck/cards-count` - Count each remaining card
 
 ### Player Management
 - `POST /api/v1/games/{gameId}/players` - Add player to game

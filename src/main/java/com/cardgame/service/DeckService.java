@@ -1,10 +1,14 @@
 package com.cardgame.service;
 
+import com.cardgame.exception.DeckInUseException;
+import com.cardgame.exception.DeckNotFoundException;
 import com.cardgame.model.entity.Deck;
 import com.cardgame.model.entity.Game;
+import com.cardgame.repository.DeckRepository;
 import com.cardgame.repository.GameRepository;
 import com.cardgame.util.ShuffleUtil;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -16,17 +20,81 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class DeckService {
 
+  private final DeckRepository deckRepository;
   private final GameRepository gameRepository;
   private final GameService gameService;
   private final ShuffleUtil shuffleUtil;
 
-  public void addDeckToGame(String gameId) {
-    Game game = gameService.findById(gameId);
-
+  /**
+   * Create a new deck (standalone, not attached to any game)
+   *
+   * @return created Deck
+   */
+  public Deck createDeck() {
     Deck deck = Deck.createNew();
+    deckRepository.save(deck);
+    log.info("Deck created with ID: {}", deck.getId());
+    return deck;
+  }
+
+  /**
+   * Find deck by ID
+   *
+   * @param deckId deck ID
+   * @return Deck
+   * @throws DeckNotFoundException if deck not found
+   */
+  public Deck findById(String deckId) {
+    return deckRepository.findById(deckId).orElseThrow(() -> new DeckNotFoundException(deckId));
+  }
+
+  /**
+   * Get all decks
+   *
+   * @return list of all decks
+   */
+  public List<Deck> getAllDecks() {
+    return deckRepository.findAll();
+  }
+
+  /**
+   * Add an existing deck to a game
+   *
+   * @param gameId game ID
+   * @param deckId deck ID
+   * @throws DeckNotFoundException if deck not found
+   * @throws com.cardgame.exception.GameNotFoundException if game not found
+   */
+  public void addDeckToGame(String gameId, String deckId) {
+    Game game = gameService.findById(gameId);
+    Deck deck = findById(deckId);
+
     game.addDeck(deck);
     gameRepository.save(game);
-    log.info("Deck added to game {}. Total cards: {}", gameId, game.getGameDeck().size());
+    log.info(
+        "Deck {} added to game {}. Total cards: {}", deckId, gameId, game.getGameDeck().size());
+  }
+
+  /**
+   * Delete a deck (only if not in use by any game)
+   *
+   * @param deckId deck ID
+   * @throws DeckNotFoundException if deck not found
+   * @throws DeckInUseException if deck is in use by a game
+   */
+  public void deleteDeck(String deckId) {
+    Deck deck = findById(deckId);
+
+    // Check if deck is in use by any game
+    List<Game> allGames = gameRepository.findAll();
+    boolean isInUse = allGames.stream().anyMatch(game -> game.getDeckIdsInUse().contains(deckId));
+
+    if (isInUse) {
+      throw new DeckInUseException(deckId);
+    }
+
+    deckRepository.deleteById(deckId);
+    log.info("Deck {} deleted", deckId);
   }
 
   public void shuffleGameDeck(String gameId) {

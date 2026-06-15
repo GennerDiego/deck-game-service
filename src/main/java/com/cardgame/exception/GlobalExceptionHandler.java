@@ -81,6 +81,26 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
   }
 
+  @ExceptionHandler(DeckInUseException.class)
+  public ResponseEntity<ErrorResponse> handleDeckInUse(
+      DeckInUseException ex, HttpServletRequest request) {
+    log.warn("Deck in use: {}", ex.getMessage());
+    ErrorResponse error =
+        ErrorResponse.of(
+            HttpStatus.CONFLICT.value(), "Conflict", ex.getMessage(), request.getRequestURI());
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+  }
+
+  @ExceptionHandler(DeckAlreadyAddedException.class)
+  public ResponseEntity<ErrorResponse> handleDeckAlreadyAdded(
+      DeckAlreadyAddedException ex, HttpServletRequest request) {
+    log.warn("Deck already added: {}", ex.getMessage());
+    ErrorResponse error =
+        ErrorResponse.of(
+            HttpStatus.CONFLICT.value(), "Conflict", ex.getMessage(), request.getRequestURI());
+    return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+  }
+
   @ExceptionHandler(UnauthorizedException.class)
   public ResponseEntity<ErrorResponse> handleUnauthorized(
       UnauthorizedException ex, HttpServletRequest request) {

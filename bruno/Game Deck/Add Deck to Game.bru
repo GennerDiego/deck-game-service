@@ -1,0 +1,26 @@
+meta {
+  name: Add Deck to Game
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/games/{{gameId}}/deck/{{deckId}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should return 204", function() {
+    expect(res.status).to.equal(204);
+  });
+}
+
+docs {
+  Adds a deck's cards to the game's shoe.
+  The deck template remains unchanged while cards are copied into the game.
+}

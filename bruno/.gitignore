@@ -1,0 +1,11 @@
+# Bruno local files
+*.bru~
+.bruno/
+
+# Environment secrets (if you create custom environments with sensitive data)
+environments/Production.bru
+environments/*Secret*.bru
+
+# Backup files
+*.backup
+*.old

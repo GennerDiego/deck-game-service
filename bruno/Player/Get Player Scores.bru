@@ -1,0 +1,41 @@
+meta {
+  name: Get Player Scores
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/games/{{gameId}}/players/scores
+  body: none
+  auth: none
+}
+
+tests {
+  test("should return 200", function() {
+    expect(res.status).to.equal(200);
+  });
+
+  test("should return array", function() {
+    expect(res.body).to.be.an('array');
+  });
+
+  test("should be sorted by score descending", function() {
+    for (let i = 0; i < res.body.length - 1; i++) {
+      expect(res.body[i].totalValue).to.be.at.least(res.body[i + 1].totalValue);
+    }
+  });
+
+  test("each player should have required fields", function() {
+    res.body.forEach(player => {
+      expect(player).to.have.property('id');
+      expect(player).to.have.property('name');
+      expect(player).to.have.property('cardCount');
+      expect(player).to.have.property('totalValue');
+    });
+  });
+}
+
+docs {
+  Returns all players with their scores sorted by total value (descending).
+  Score = sum of face values of all cards held by the player.
+}

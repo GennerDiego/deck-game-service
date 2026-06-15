@@ -1,0 +1,26 @@
+meta {
+  name: Delete Deck
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/decks/{{deckId}}
+  body: none
+  auth: none
+}
+
+headers {
+  X-API-Key: {{apiKey}}
+}
+
+tests {
+  test("should return 204 or 409", function() {
+    expect([204, 409]).to.include(res.status);
+  });
+}
+
+docs {
+  Returns 409 Conflict if deck is in use by any game.
+  Returns 204 No Content if deletion is successful.
+}

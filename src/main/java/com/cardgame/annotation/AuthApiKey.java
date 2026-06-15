@@ -1,5 +1,6 @@
 package com.cardgame.annotation;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.lang.annotation.*;
 
 /**
@@ -21,4 +22,5 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@SecurityRequirement(name = "X-API-Key")
 public @interface AuthApiKey {}
