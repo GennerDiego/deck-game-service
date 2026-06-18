@@ -2,6 +2,13 @@ app:
   security:
     api-key: ${API_KEY:default-api-key-change-me}
 
+  concurrency:
+    lock:
+      timeout-seconds: 10  # Max time to hold a lock
+      retry:
+        max-attempts: 3
+        initial-backoff-ms: 50  # Initial backoff time for retries
+
 spring:
   application:
     name: deck-game-service

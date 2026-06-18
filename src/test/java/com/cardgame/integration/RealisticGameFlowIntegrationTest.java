@@ -347,7 +347,8 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
     // When/Then - Query 1: Player scores
     List<PlayerScoreResponse> scores1 = getPlayerScores(game.getId());
     assertThat(scores1).hasSize(3);
-    assertThat(scores1.get(0).getCardCount()).isEqualTo(7);
+    // Verify total cards dealt (scores are sorted by total value, not card count)
+    assertThat(scores1.stream().mapToInt(PlayerScoreResponse::getCardCount).sum()).isEqualTo(15);
 
     // When/Then - Query 2: Suit counts
     Map<String, Integer> suitCounts1 = getSuitCounts(game.getId());
@@ -365,7 +366,8 @@ class RealisticGameFlowIntegrationTest extends BaseIntegrationTest {
 
     // When/Then - Query 4: Updated scores
     List<PlayerScoreResponse> scores2 = getPlayerScores(game.getId());
-    assertThat(scores2.get(0).getCardCount()).isIn(10, 10, 3); // One of them has 10
+    // Verify total cards dealt after additional deals (7+3=10, 5+5=10, 3)
+    assertThat(scores2.stream().mapToInt(PlayerScoreResponse::getCardCount).sum()).isEqualTo(23);
 
     // When/Then - Query 5: Updated counts
     Map<String, Integer> suitCounts2 = getSuitCounts(game.getId());

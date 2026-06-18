@@ -20,35 +20,48 @@ public class PlayerService {
 
   private final GameRepository gameRepository;
   private final GameService gameService;
+  private final DistributedLockService lockService;
 
   public void addPlayer(String gameId, Player player) {
-    Game game = gameService.findById(gameId);
+    String lockKey = "game:" + gameId;
 
-    // Check for duplicate player ID
-    if (game.hasPlayer(player.getId())) {
-      throw new DuplicatePlayerException(player.getId(), gameId);
-    }
+    lockService.executeWithLock(
+        lockKey,
+        () -> {
+          Game game = gameService.findById(gameId);
 
-    // Check for duplicate player name (case-insensitive)
-    if (game.hasPlayerByName(player.getName())) {
-      throw new DuplicatePlayerException(player.getName(), gameId);
-    }
+          // Check for duplicate player ID
+          if (game.hasPlayer(player.getId())) {
+            throw new DuplicatePlayerException(player.getId(), gameId);
+          }
 
-    game.addPlayer(player);
-    gameRepository.save(game);
-    log.info("Player {} added to game {}", player.getId(), gameId);
+          // Check for duplicate player name (case-insensitive)
+          if (game.hasPlayerByName(player.getName())) {
+            throw new DuplicatePlayerException(player.getName(), gameId);
+          }
+
+          game.addPlayer(player);
+          gameRepository.save(game);
+          log.info("Player {} added to game {}", player.getId(), gameId);
+        });
   }
 
   public void removePlayer(String gameId, String playerId) {
-    Game game = gameService.findById(gameId);
+    String lockKey = "game:" + gameId;
 
-    if (!game.hasPlayer(playerId)) {
-      throw new PlayerNotFoundException(playerId, gameId);
-    }
+    lockService.executeWithLock(
+        lockKey,
+        () -> {
+          Game game = gameService.findById(gameId);
 
-    game.removePlayer(playerId);
-    gameRepository.save(game);
-    log.info("Player {} removed from game {}", playerId, gameId);
+          if (!game.hasPlayer(playerId)) {
+            throw new PlayerNotFoundException(playerId, gameId);
+          }
+
+          game.removePlayer(playerId);
+          gameRepository.save(game);
+          log.info("Player {} removed from game {}", playerId, gameId);
+        });
   }
 
   public List<Card> dealCards(String gameId, String playerId, int count) {
@@ -56,32 +69,38 @@ public class PlayerService {
       throw InvalidDealOperationException.invalidCount(count);
     }
 
-    Game game = gameService.findById(gameId);
+    String lockKey = "game:" + gameId;
 
-    if (!game.hasPlayer(playerId)) {
-      throw new PlayerNotFoundException(playerId, gameId);
-    }
+    return lockService.executeWithLock(
+        lockKey,
+        () -> {
+          Game game = gameService.findById(gameId);
 
-    // If deck is empty, return empty list (doesn't throw exception)
-    int cardsToDeal = Math.min(count, game.getGameDeck().size());
-    List<Card> dealtCards = new ArrayList<>();
-    Player player = game.getPlayer(playerId);
+          if (!game.hasPlayer(playerId)) {
+            throw new PlayerNotFoundException(playerId, gameId);
+          }
 
-    for (int i = 0; i < cardsToDeal; i++) {
-      Card card = game.getGameDeck().remove(0);
-      dealtCards.add(card);
-      player.getCards().add(card);
-    }
+          // If deck is empty, return empty list (doesn't throw exception)
+          int cardsToDeal = Math.min(count, game.getGameDeck().size());
+          List<Card> dealtCards = new ArrayList<>();
+          Player player = game.getPlayer(playerId);
 
-    gameRepository.save(game);
-    log.debug(
-        "Dealt {} cards to player {} in game {}. Remaining cards: {}",
-        cardsToDeal,
-        playerId,
-        gameId,
-        game.getGameDeck().size());
+          for (int i = 0; i < cardsToDeal; i++) {
+            Card card = game.getGameDeck().remove(0);
+            dealtCards.add(card);
+            player.getCards().add(card);
+          }
 
-    return dealtCards;
+          gameRepository.save(game);
+          log.debug(
+              "Dealt {} cards to player {} in game {}. Remaining cards: {}",
+              cardsToDeal,
+              playerId,
+              gameId,
+              game.getGameDeck().size());
+
+          return dealtCards;
+        });
   }
 
   public List<Card> getPlayerCards(String gameId, String playerId) {

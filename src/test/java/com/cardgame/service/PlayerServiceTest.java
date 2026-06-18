@@ -12,6 +12,8 @@ import com.cardgame.model.entity.Game;
 import com.cardgame.model.entity.Player;
 import com.cardgame.repository.GameRepository;
 import java.util.List;
+import java.util.function.Supplier;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -28,7 +30,28 @@ class PlayerServiceTest {
 
   @Mock private GameService gameService;
 
+  @Mock private DistributedLockService lockService;
+
   @InjectMocks private PlayerService playerService;
+
+  @BeforeEach
+  void setUp() {
+    // Mock lockService to execute the operation directly (bypass actual locking in unit tests)
+    // Use lenient() because not all test methods use locking
+    lenient()
+        .when(lockService.executeWithLock(anyString(), any(Supplier.class)))
+        .thenAnswer(invocation -> ((Supplier<?>) invocation.getArgument(1)).get());
+
+    // Mock void version for operations that don't return values
+    lenient()
+        .doAnswer(
+            invocation -> {
+              ((Runnable) invocation.getArgument(1)).run();
+              return null;
+            })
+        .when(lockService)
+        .executeWithLock(anyString(), any(Runnable.class));
+  }
 
   @Nested
   @DisplayName("addPlayer()")
