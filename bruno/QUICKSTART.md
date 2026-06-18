@@ -1,34 +1,34 @@
 # 🚀 Quick Start Guide - Bruno Collection
 
-## Executar um Jogo Completo em 5 Minutos
+## Run a Complete Game in 5 Minutes
 
-### Pré-requisitos
-✅ Bruno instalado  
-✅ API rodando em `http://localhost:8080`  
-✅ Coleção aberta no Bruno  
+### Prerequisites
+✅ Bruno installed  
+✅ API running at `http://localhost:8080`  
+✅ Collection open in Bruno  
 
 ---
 
-## 🎯 Fluxo Rápido (15 requests)
+## 🎯 Quick Flow (15 requests)
 
 ### 1. Setup Game (3 requests)
 
 #### 1.1 Create Game
 ```
 Request: Game/Create Game
-✨ Auto-salva: gameId
+✨ Auto-saves: gameId
 ```
 
 #### 1.2 Create Deck
 ```
 Request: Deck/Create Deck
-✨ Auto-salva: deckId
+✨ Auto-saves: deckId
 ```
 
 #### 1.3 Add Deck to Game
 ```
 Request: Game Deck/Add Deck to Game
-Usa: gameId, deckId
+Uses: gameId, deckId
 ```
 
 ---
@@ -45,21 +45,21 @@ Body: { "name": "Alice" }
 ```
 Request: Player/Add Player
 Body: { "name": "Bob" }
-⚠️ Altere o body para "Bob"
+⚠️ Change body to "Bob"
 ```
 
 #### 2.3 Add Player 3 (Charlie)
 ```
 Request: Player/Add Player
 Body: { "name": "Charlie" }
-⚠️ Altere o body para "Charlie"
+⚠️ Change body to "Charlie"
 ```
 
 #### 2.4 Get Player IDs
 ```
 Request: Player/Get Player IDs (Helper)
-📋 Copie o ID do player que você quer usar
-⚙️ Settings → Environment → Cole em playerId
+📋 Copy the ID of the player you want to use
+⚙️ Settings → Environment → Paste in playerId
 ```
 
 ---
@@ -69,27 +69,27 @@ Request: Player/Get Player IDs (Helper)
 #### 3.1 Shuffle Deck
 ```
 Request: Game Deck/Shuffle Game Deck
-Embaralha o shoe do game
+Shuffles the game shoe
 ```
 
 #### 3.2 Deal Cards (Alice)
 ```
 Request: Player/Deal Cards
-⚠️ Use o playerId de Alice (copiado no passo 2.4)
+⚠️ Use Alice's playerId (copied in step 2.4)
 Params: count=5
 ```
 
 #### 3.3 Deal Cards (Bob)
 ```
 Request: Player/Deal Cards
-⚠️ Altere playerId para Bob (pegue do passo 2.4)
+⚠️ Change playerId to Bob (get from step 2.4)
 Params: count=5
 ```
 
 #### 3.4 Deal Cards (Charlie)
 ```
 Request: Player/Deal Cards
-⚠️ Altere playerId para Charlie (pegue do passo 2.4)
+⚠️ Change playerId to Charlie (get from step 2.4)
 Params: count=5
 ```
 
@@ -100,48 +100,48 @@ Params: count=5
 #### 4.1 Player Scores
 ```
 Request: Player/Get Player Scores
-Vê ranking de todos os jogadores
+View ranking of all players
 ```
 
 #### 4.2 Game State
 ```
 Request: Game/Get Game
-Vê estado completo (players, cardsRemaining)
+View complete state (players, cardsRemaining)
 ```
 
 #### 4.3 Suit Counts
 ```
 Request: Game Deck/Get Suit Counts
-Conta cartas restantes por naipe
+Count remaining cards by suit
 ```
 
 #### 4.4 Card Counts
 ```
 Request: Game Deck/Get Card Counts
-Conta cada carta específica restante
+Count each specific remaining card
 ```
 
 ---
 
-## 📊 Resultado Esperado
+## 📊 Expected Result
 
-Após executar todas as requests, você verá:
+After executing all requests, you'll see:
 
-✅ **3 jogadores** com 5 cartas cada  
-✅ **37 cartas restantes** no shoe (52 - 15)  
-✅ **Ranking** de jogadores por pontuação  
-✅ **Contagem** de cartas por naipe e tipo  
+✅ **3 players** with 5 cards each  
+✅ **37 cards remaining** in the shoe (52 - 15)  
+✅ **Ranking** of players by score  
+✅ **Counts** of cards by suit and type  
 
 ---
 
-## 🎮 Cenários Alternativos
+## 🎮 Alternative Scenarios
 
-### Cenário: Blackjack (6 decks)
+### Scenario: Blackjack (6 decks)
 
 ```
 1. Create Game → gameId
 2. Create Deck (6x) → deck1, deck2, ..., deck6
-3. Add Deck to Game (6x com cada deckId)
+3. Add Deck to Game (6x with each deckId)
 4. Shuffle Game Deck
 5. Add 3 Players
 6. Deal 2 cards each
@@ -149,7 +149,7 @@ Após executar todas as requests, você verá:
 8. Get Player Scores
 ```
 
-### Cenário: Texas Hold'em
+### Scenario: Texas Hold'em
 
 ```
 1. Create Game → gameId
@@ -161,7 +161,7 @@ Após executar todas as requests, você verá:
 7. Get Player Scores
 ```
 
-### Cenário: Draw All Cards
+### Scenario: Draw All Cards
 
 ```
 1. Create Game → gameId
@@ -169,8 +169,8 @@ Após executar todas as requests, você verá:
 3. Add Deck to Game
 4. Add 1 Player
 5. Shuffle Game Deck
-6. Deal 52 cards (pega todas)
-7. Get Player Cards (vê todas as 52)
+6. Deal 52 cards (takes all)
+7. Get Player Cards (see all 52)
 8. Get Game (cardsRemaining = 0)
 ```
 
@@ -178,89 +178,93 @@ Após executar todas as requests, você verá:
 
 ## 💡 Pro Tips
 
-### Usar o mesmo Game para múltiplos testes
-Não delete o game entre testes. Você pode:
-- Adicionar mais decks ao shoe
-- Adicionar/remover players
-- Shufflar novamente
-- Continuar dealing
+### Use the same Game for multiple tests
+Don't delete the game between tests. You can:
+- Add more decks to the shoe
+- Add/remove players
+- Shuffle again
+- Continue dealing
 
-### Resetar variáveis
-Se quiser começar do zero:
+### Reset variables
+If you want to start from scratch:
 ```
 1. Delete Game
 2. Delete Deck
-3. Vá em Settings → Environment
-4. Limpe gameId, deckId, playerId
-5. Comece novamente
+3. Go to Settings → Environment
+4. Clear gameId, deckId, playerId
+5. Start again
 ```
 
-### Múltiplos jogadores
-Para testar com mais jogadores:
+### Multiple players
+To test with more players:
 ```
-1. Execute Add Player 10 vezes
-2. Altere o body cada vez: 
+1. Execute Add Player 10 times
+2. Change the body each time: 
    - Player1, Player2, ..., Player10
-3. Para deal, copie/cole a request
-   e altere o playerId manualmente
+3. To deal, copy/paste the request
+   and change playerId manually
 ```
 
-### Ver todas as variáveis
+### View all variables
 ```
 Settings → Environment → Local
 ```
-Você verá:
+You'll see:
 - baseUrl
 - apiKey
-- gameId (preenchido após Create Game)
-- deckId (preenchido após Create Deck)
-- playerId (preenchido após Add Player)
+- gameId (populated after Create Game)
+- deckId (populated after Create Deck)
+- playerId (populated after Add Player)
 
 ---
 
-## 🐛 Problemas Comuns
+## 🐛 Common Issues
 
-### "playerId é do último jogador adicionado"
-**Solução**: Copie o playerId correto do response de "Get Game"
+### "playerId is from the last added player"
+**Solution**: Copy the correct playerId from "Get Game" response
 
 ```
 1. Execute: Game/Get Game
-2. Veja a lista de players na response
-3. Copie o ID do player desejado
-4. Cole manualmente na variável playerId
+2. See the players list in the response
+3. Copy the ID of the desired player
+4. Paste manually in the playerId variable
 ```
 
-### "Não consigo deal cards"
-**Verificar**:
-- ✅ Deck foi adicionado ao game?
-- ✅ Deck foi shufflado?
-- ✅ playerId está correto?
-- ✅ Há cartas disponíveis? (Get Game → cardsRemaining > 0)
+### "Can't deal cards"
+**Check**:
+- ✅ Was deck added to game?
+- ✅ Was deck shuffled?
+- ✅ Is playerId correct?
+- ✅ Are there cards available? (Get Game → cardsRemaining > 0)
 
-### "Erro 409 ao deletar deck"
-**Causa**: Deck está em uso por um game ativo  
-**Solução**: Delete o game primeiro, depois o deck
+### "Error 409 when deleting deck"
+**Cause**: Deck is in use by an active game  
+**Solution**: Delete the game first, then the deck
 
-### "Erro 404"
-**Causa**: IDs (gameId, deckId, playerId) inválidos  
-**Solução**: Execute as requests de criação novamente
+### "Error 404"
+**Cause**: Invalid IDs (gameId, deckId, playerId)  
+**Solution**: Execute creation requests again
+
+### "ConcurrentOperationException"
+**Cause**: Another operation is in progress on the same game  
+**Solution**: Wait and try again - automatic retry will handle it (3 attempts with 50ms → 100ms → 200ms backoff)
 
 ---
 
-## ⚡ Atalhos
+## ⚡ Shortcuts
 
 ```
-Cmd/Ctrl + Enter    → Executar request
-Cmd/Ctrl + E        → Trocar ambiente
+Cmd/Ctrl + Enter    → Execute request
+Cmd/Ctrl + E        → Switch environment
 Cmd/Ctrl + B        → Toggle sidebar
-Cmd/Ctrl + /        → Buscar requests
+Cmd/Ctrl + /        → Search requests
 ```
 
 ---
 
 ## 🎬 Next Steps
 
-Após dominar o fluxo básico, explore:
+After mastering the basic flow, explore:
 
 1. **Deck Operations**
    - Get All Decks
@@ -284,4 +288,4 @@ Após dominar o fluxo básico, explore:
 
 ---
 
-**Pronto para começar? Execute a primeira request: `Game/Create Game`** 🚀
+**Ready to start? Execute the first request: `Game/Create Game`** 🚀

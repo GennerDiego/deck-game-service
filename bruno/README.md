@@ -1,14 +1,14 @@
 # Bruno API Collection - Deck Game Service
 
-Esta coleção Bruno contém todos os endpoints da API organizados por controller.
+This Bruno collection contains all API endpoints organized by controller.
 
-## 📁 Estrutura da Coleção
+## 📁 Collection Structure
 
 ```
 bruno/
 ├── environments/
-│   ├── Local.bru          # Ambiente local (localhost)
-│   └── Docker.bru         # Ambiente Docker
+│   ├── Local.bru          # Local environment (localhost)
+│   └── Docker.bru         # Docker environment
 ├── Game/                  # Game Controller
 │   ├── Create Game.bru
 │   ├── Get Game.bru
@@ -31,68 +31,68 @@ bruno/
     └── Remove Player.bru
 ```
 
-## 🚀 Como Usar
+## 🚀 How to Use
 
-### 1. Instalar Bruno
+### 1. Install Bruno
 
 ```bash
 # macOS
 brew install bruno
 
-# Ou baixe de: https://www.usebruno.com/downloads
+# Or download from: https://www.usebruno.com/downloads
 ```
 
-### 2. Abrir a Coleção
+### 2. Open Collection
 
-1. Abra o Bruno
-2. Clique em "Open Collection"
-3. Selecione a pasta `/deck-game-service/bruno`
+1. Open Bruno
+2. Click "Open Collection"
+3. Select the `/deck-game-service/bruno` folder
 
-### 3. Selecionar Ambiente
+### 3. Select Environment
 
-- Clique no dropdown de ambientes no topo
-- Selecione **"Local"** (padrão) ou **"Docker"**
+- Click the environment dropdown at the top
+- Select **"Local"** (default) or **"Docker"**
 
-### 4. Iniciar a API
+### 4. Start the API
 
 ```bash
 # Local
 ./gradlew bootRun
 
-# Ou via Docker
+# Or via Docker
 docker compose up
 ```
 
-## 🔑 Variáveis de Ambiente
+## 🔑 Environment Variables
 
-As seguintes variáveis são compartilhadas entre todas as requests:
+The following variables are shared across all requests:
 
-| Variável   | Descrição                                    | Valor Inicial                |
+| Variable   | Description                                  | Initial Value                |
 |------------|----------------------------------------------|------------------------------|
-| `baseUrl`  | URL base da API                              | `http://localhost:8080/api/v1` |
-| `apiKey`   | API Key para autenticação                    | `default-api-key-change-me`  |
-| `gameId`   | ID do game atual (auto-preenchido)          | (vazio)                      |
-| `playerId` | ID do player atual (auto-preenchido)        | (vazio)                      |
-| `deckId`   | ID do deck atual (auto-preenchido)          | (vazio)                      |
+| `baseUrl`  | API base URL                                 | `http://localhost:8080/api/v1` |
+| `apiKey`   | API Key for authentication                   | `default-api-key-change-me`  |
+| `gameId`   | Current game ID (auto-populated)            | (empty)                      |
+| `playerId` | Current player ID (auto-populated)          | (empty)                      |
+| `deckId`   | Current deck ID (auto-populated)            | (empty)                      |
 
-### Variáveis Auto-preenchidas
+### Auto-populated Variables
 
-As requests seguintes **automaticamente salvam** IDs no ambiente:
+The following requests **automatically save** IDs to the environment:
 
-- ✅ **Create Game** → salva `gameId`
-- ✅ **Create Deck** → salva `deckId`
+- ✅ **Create Game** → saves `gameId`
+- ✅ **Create Deck** → saves `deckId`
 
-### Obter Player ID (manual)
+### Get Player ID (manual)
 
-Após adicionar um player, você precisa obter o `playerId`:
+After adding a player, you need to get the `playerId`:
 
 1. Execute: **Player/Get Player IDs (Helper)**
-2. Na resposta, encontre seu player na array `players`
-3. Copie o campo `id` do player desejado
-4. Vá em **Settings → Environment → Local**
-5. Cole o ID na variável `playerId`
+2. In the response, find your player in the `players` array
+3. Copy the `id` field of the desired player
+4. Go to **Settings → Environment → Local**
+5. Paste the ID in the `playerId` variable
 
-Exemplo:
+Example:
 ```json
 {
   "players": [
@@ -101,141 +101,150 @@ Exemplo:
   ]
 }
 ```
-Para usar Alice: `playerId = player-abc123`
+To use Alice: `playerId = player-abc123`
 
-## 📋 Fluxo de Teste Recomendado
+## 📋 Recommended Test Flow
 
-Execute as requests nesta ordem para testar um fluxo completo:
+Execute requests in this order to test a complete flow:
 
-### 1️⃣ Setup Inicial
-1. **Game/Create Game** → salva `gameId`
-2. **Deck/Create Deck** → salva `deckId`
-3. **Game Deck/Add Deck to Game** → adiciona deck ao game
+### 1️⃣ Initial Setup
+1. **Game/Create Game** → saves `gameId`
+2. **Deck/Create Deck** → saves `deckId`
+3. **Game Deck/Add Deck to Game** → adds deck to game
 
-### 2️⃣ Adicionar Jogadores
-4. **Player/Add Player** → salva `playerId`
-5. Repita para adicionar mais jogadores (altere o nome no body)
+### 2️⃣ Add Players
+4. **Player/Add Player** → saves `playerId`
+5. Repeat to add more players (change name in body)
 
-### 3️⃣ Jogar
-6. **Game Deck/Shuffle Game Deck** → embaralha as cartas
-7. **Player/Deal Cards** → distribui cartas (ajuste `count` query param)
-8. **Player/Get Player Cards** → vê as cartas do jogador
-9. **Player/Get Player Scores** → vê ranking de jogadores
+### 3️⃣ Play
+6. **Game Deck/Shuffle Game Deck** → shuffles cards
+7. **Player/Deal Cards** → deals cards (adjust `count` query param)
+8. **Player/Get Player Cards** → view player's cards
+9. **Player/Get Player Scores** → view player rankings
 
-### 4️⃣ Consultas
-10. **Game/Get Game** → vê estado completo do game
-11. **Game Deck/Get Suit Counts** → conta cartas por naipe
-12. **Game Deck/Get Card Counts** → conta cada carta específica
+### 4️⃣ Queries
+10. **Game/Get Game** → view complete game state
+11. **Game Deck/Get Suit Counts** → count cards by suit
+12. **Game Deck/Get Card Counts** → count each specific card
 
 ### 5️⃣ Cleanup
-13. **Player/Remove Player** → remove jogador (opcional)
-14. **Game/Delete Game** → deleta o game
-15. **Deck/Delete Deck** → deleta o deck (se não estiver em uso)
+13. **Player/Remove Player** → remove player (optional)
+14. **Game/Delete Game** → delete the game
+15. **Deck/Delete Deck** → delete the deck (if not in use)
 
-## 🔍 Recursos das Requests
+## 🔍 Request Features
 
-### Headers Automáticos
-- Requests que requerem autenticação incluem `X-API-Key: {{apiKey}}` automaticamente
-- GET requests **não** requerem API key
-- POST/DELETE requests **requerem** API key
+### Automatic Headers
+- Requests requiring authentication include `X-API-Key: {{apiKey}}` automatically
+- GET requests **do not** require API key
+- POST/DELETE requests **require** API key
 
-### Tests Incluídos
-Cada request tem testes automáticos que validam:
-- ✅ Status code correto
-- ✅ Estrutura da resposta
-- ✅ Valores esperados
-- ✅ Validações de negócio
+### Included Tests
+Each request has automatic tests that validate:
+- ✅ Correct status code
+- ✅ Response structure
+- ✅ Expected values
+- ✅ Business validations
 
-Veja os resultados no painel "Tests" do Bruno após executar cada request.
+View results in Bruno's "Tests" panel after executing each request.
 
-### Scripts Post-Response
-Algumas requests executam scripts após receber a resposta:
-- `Create Game` → salva gameId
-- `Create Deck` → salva deckId
-- `Add Player` → busca o game e salva playerId
+### Post-Response Scripts
+Some requests execute scripts after receiving the response:
+- `Create Game` → saves gameId
+- `Create Deck` → saves deckId
+- `Add Player` → fetches game and saves playerId
 
-### Documentação
-Cada request tem uma aba "Docs" com:
-- Descrição do endpoint
-- Comportamento esperado
-- Notas importantes
+### Documentation
+Each request has a "Docs" tab with:
+- Endpoint description
+- Expected behavior
+- Important notes
 
-## 🎯 Dicas
+## 🎯 Tips
 
-### Editar Variáveis Manualmente
-Se precisar, você pode editar as variáveis diretamente:
+### Edit Variables Manually
+If needed, you can edit variables directly:
 
-1. Clique no ícone de engrenagem ⚙️
-2. Selecione o ambiente (Local ou Docker)
-3. Edite os valores das variáveis
-4. Salve
+1. Click the settings icon ⚙️
+2. Select the environment (Local or Docker)
+3. Edit variable values
+4. Save
 
 ### Query Parameters
-Para alterar parâmetros (ex: número de cartas para deal):
+To change parameters (e.g., number of cards to deal):
 
-1. Abra a request **Player/Deal Cards**
-2. Vá na aba "Params"
-3. Altere o valor de `count`
+1. Open the **Player/Deal Cards** request
+2. Go to the "Params" tab
+3. Change the `count` value
 
 ### Request Body
-Para mudar o nome do jogador:
+To change player name:
 
-1. Abra **Player/Add Player**
-2. Vá na aba "Body"
-3. Altere o valor de `name`
+1. Open **Player/Add Player**
+2. Go to the "Body" tab
+3. Change the `name` value
 
-### Executar em Sequência
-Use o recurso "Run Collection" do Bruno para executar todas as requests em ordem automaticamente!
+### Run in Sequence
+Use Bruno's "Run Collection" feature to execute all requests in order automatically!
 
-## ⚡ Atalhos de Teclado
+## ⚡ Keyboard Shortcuts
 
-- `Cmd/Ctrl + Enter` → Executar request atual
-- `Cmd/Ctrl + E` → Abrir seletor de ambiente
-- `Cmd/Ctrl + /` → Buscar requests
-- `Cmd/Ctrl + B` → Alternar sidebar
+- `Cmd/Ctrl + Enter` → Execute current request
+- `Cmd/Ctrl + E` → Open environment selector
+- `Cmd/Ctrl + /` → Search requests
+- `Cmd/Ctrl + B` → Toggle sidebar
 
 ## 🐛 Troubleshooting
 
-### Erro 401 Unauthorized
-- Verifique se a variável `apiKey` está configurada corretamente
-- Certifique-se que o header `X-API-Key` está presente
+### Error 401 Unauthorized
+- Check if the `apiKey` variable is configured correctly
+- Ensure the `X-API-Key` header is present
 
-### Erro 404 Not Found
-- Verifique se as variáveis `gameId`, `deckId`, `playerId` estão preenchidas
-- Execute as requests de criação primeiro
+### Error 404 Not Found
+- Verify that `gameId`, `deckId`, `playerId` variables are populated
+- Execute creation requests first
 
-### Erro 409 Conflict
-- Ao deletar deck: o deck está sendo usado em um game ativo
-- Ao adicionar player: já existe um player com esse nome
+### Error 409 Conflict
+- When deleting deck: deck is being used in an active game
+- When adding player: a player with that name already exists
 
-### Servidor não responde
+### Server not responding
 ```bash
-# Verifique se o servidor está rodando
+# Check if server is running
 curl http://localhost:8080/api/v1/actuator/health
 
-# Se não estiver, inicie:
+# If not, start it:
 ./gradlew bootRun
-# ou
+# or
 docker compose up
 ```
 
-## 📚 Recursos Adicionais
+## 🔒 Concurrency Notes
+
+All state-modifying operations (POST/DELETE) use distributed locking:
+- **Automatic retry** on lock contention (up to 3 attempts with exponential backoff)
+- **Thread-safe** across multiple instances
+- **Auto-recovery** if lock holder crashes (10s TTL)
+
+If you see a `ConcurrentOperationException`, another operation is in progress. The system will automatically retry.
+
+## 📚 Additional Resources
 
 - **Swagger UI**: http://localhost:8080/api/v1/swagger-ui.html
 - **API Docs**: http://localhost:8080/api/v1/api-docs
 - **Health Check**: http://localhost:8080/api/v1/actuator/health
 
-## 🤝 Contribuindo
+## 🤝 Contributing
 
-Para adicionar novos endpoints à coleção:
+To add new endpoints to the collection:
 
-1. Crie um novo arquivo `.bru` na pasta apropriada
-2. Use o formato:
+1. Create a new `.bru` file in the appropriate folder
+2. Use the format:
 ```
 meta {
-  name: Nome do Endpoint
+  name: Endpoint Name
   type: http
-  seq: ordem_sequencial
+  seq: sequential_order
 }
 
 post/get/delete {
@@ -255,8 +264,8 @@ tests {
 }
 ```
 
-3. Adicione scripts post-response se necessário salvar variáveis
-4. Documente na aba `docs` se necessário
+3. Add post-response scripts if needed to save variables
+4. Document in the `docs` tab if necessary
 
 ---
 

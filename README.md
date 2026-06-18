@@ -178,20 +178,29 @@ docker compose exec app bash
 - Create and delete games
 - Add multiple decks to a game (shoe)
 - Shuffle game deck using manual Fisher-Yates algorithm
+- **Thread-safe operations** with distributed locking
 
 ### Player Management
-- Add players to a game
+- Add players to a game (with duplicate detection)
 - Remove players from a game
 - Track player scores based on card face values
+- **Concurrent-safe** player operations
 
 ### Card Operations
-- Deal cards to players
+- Deal cards to players atomically
 - View player's cards
 - List all players with scores (sorted by highest to lowest)
+- **Lock-protected** card distribution
 
 ### Game Deck Queries
 - Count undealt cards by suit
 - Count each remaining card in deck (sorted by suit and value)
+
+### Concurrency & Reliability
+- **Distributed locking**: Redis-based locks prevent race conditions
+- **Automatic retry**: Exponential backoff on lock contention (50ms → 100ms → 200ms)
+- **Auto-recovery**: Locks expire after 10s if app crashes (no orphan locks)
+- **Multi-instance safe**: Works across multiple app instances
 
 ### Business Rules
 - Standard deck: 52 cards (4 suits × 13 ranks)
@@ -199,6 +208,7 @@ docker compose exec app bash
 - Shuffle algorithm must be implemented manually (no library shuffle)
 - Cards can be dealt until deck is empty
 - Score calculation: Ace=1, 2-10=face value, Jack=11, Queen=12, King=13
+- All state-modifying operations are atomic and thread-safe
 
 ## 🔐 Authentication
 
@@ -512,8 +522,10 @@ Both services include health checks:
 | Framework | Spring Boot 3.2.6 |
 | Build Tool | Gradle 8.8 (Kotlin DSL) |
 | Database | Redis 7.2 |
+| Concurrency | Redis-based distributed locks with retry |
 | API Documentation | OpenAPI 3.0 (Swagger) |
-| Testing | JUnit 5, Mockito, Testcontainers |
+| Testing | JUnit 5, Mockito, Testcontainers (192 tests) |
+| Code Coverage | 94% (Jacoco) |
 | Code Formatting | Spotless + Google Java Format |
 | Containerization | Docker + Docker Compose |
 
