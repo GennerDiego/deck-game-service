@@ -27,25 +27,33 @@ This is a Spring Boot REST API service that implements a poker-style deck of car
 - **Language**: Java 17+
 - **Framework**: Spring Boot 3.x
 - **Primary Storage**: Redis
+- **Concurrency**: Redis-based distributed locks with retry mechanism
 - **Build Tool**: Gradle 8.8 (Kotlin DSL)
 - **Testing**: JUnit 5, Mockito, Testcontainers
 - **API Documentation**: OpenAPI 3.0 (Swagger)
 - **Containerization**: Docker + Docker Compose
 
-## Project Structure (Planned)
+## Project Structure
 
 ```
 com.cardgame
 ├── controller/          # REST API endpoints
 ├── service/             # Business logic layer
+│   ├── GameService
+│   ├── DeckService
+│   ├── PlayerService
+│   └── DistributedLockService  # Redis-based distributed locking
 ├── repository/          # Redis data access
 ├── model/
 │   ├── entity/          # Game, Deck, Card, Player domain models
 │   └── dto/             # API request/response objects
-├── config/              # Spring configuration (Redis, Swagger, etc.)
+├── config/              # Spring configuration (Redis, Swagger, Locks)
+│   └── LockProperties   # Lock configuration (timeout, retry, backoff)
 ├── exception/           # Custom exceptions and global handlers
+│   └── ConcurrentOperationException  # Lock acquisition failures
 ├── util/                # Shuffle algorithm and other utilities
-└── validator/           # Input validation logic
+├── validator/           # Input validation logic
+└── interceptor/         # API Key authentication interceptor
 ```
 
 ## Core Domain Rules
@@ -73,6 +81,26 @@ com.cardgame
 ### Score Calculation
 - Player score = sum of face values of all cards held
 - Sort players by score in descending order (highest to lowest)
+
+### Concurrency & Distributed Locking
+- **All state-modifying operations are protected with distributed locks**
+- Lock scope: `game:{gameId}` (game-level locking)
+- Lock mechanism: Redis-based with automatic retry and exponential backoff
+- Lock TTL: 10 seconds (prevents orphan locks if app crashes)
+- Retry strategy: 3 attempts with backoff (50ms → 100ms → 200ms)
+
+**Protected Operations:**
+- `addPlayer` / `removePlayer` - Prevents duplicate players and race conditions
+- `dealCards` - Ensures atomic card distribution from deck to player
+- `addDeckToGame` - Protects game deck modifications
+- `shuffleGameDeck` - Ensures shuffle atomicity
+
+**Lock Behavior:**
+- Automatic retry: If lock is busy, retries up to 3 times with exponential backoff
+- Auto-recovery: Locks expire after 10s if holder crashes (TTL-based)
+- Atomic release: Lua script ensures only lock owner can release it
+
+**Configuration:** See `application.yml` → `app.concurrency.lock`
 
 ## Redis Data Model
 
@@ -185,9 +213,16 @@ Before every commit, ensure:
 - Integration tests: use `@SpringBootTest` + Testcontainers for Redis
 
 **Test Coverage:**
-- Minimum 70% code coverage
-- 100% coverage for: shuffle algorithm, score calculation, core business rules
-- Test edge cases: empty decks, dealing more cards than available, etc.
+- Current: 94% code coverage
+- Minimum: 70% code coverage
+- 100% coverage for: shuffle algorithm, score calculation, core business rules, distributed locking
+- Test edge cases: empty decks, dealing more cards than available, concurrent operations, lock acquisition failures
+
+**Test Categories:**
+- **Unit Tests** (128 tests): Controller, Service, Util, Interceptor - no Redis
+- **Integration Tests** (64 tests): Full API flows with Testcontainers Redis
+  - Includes `ConcurrencySafetyIntegrationTest` for race condition testing
+- **Total**: 192 tests (previously 174 before locking)
 
 ### 3. Git Commit Conventions
 
@@ -319,14 +354,17 @@ curl -X POST http://localhost:8080/api/v1/games \
 
 ### Testing
 ```bash
-# Run all tests (unit + integration) - 174 tests
+# Run all tests (unit + integration) - 192 tests
 ./gradlew test
 
 # Run unit tests only (128 tests - no Redis container)
 ./gradlew unitTest
 
-# Run integration tests only (46 tests - with Testcontainers)
+# Run integration tests only (64 tests - with Testcontainers)
 ./gradlew integrationTest
+
+# Clean cache and run integration tests (recommended after changes)
+./gradlew clean integrationTest
 
 # Run integration tests with detailed logs
 ./gradlew integrationTest --info
@@ -334,20 +372,23 @@ curl -X POST http://localhost:8080/api/v1/games \
 # Run specific test file
 ./gradlew test --tests GameControllerTest
 ./gradlew test --tests GameManagementIntegrationTest
-./gradlew test --tests ShuffleUtilTest
+./gradlew test --tests ConcurrencySafetyIntegrationTest
+./gradlew test --tests DistributedLockServiceTest
 
 # Run specific test method
 ./gradlew test --tests "DealCardsIntegrationTest.dealCards_afterShuffle*"
+./gradlew test --tests "ConcurrencySafetyIntegrationTest.concurrentPlayerAdditions*"
 
-# Run tests with coverage report (current: 94.08%)
+# Run tests with coverage report (current: 94%)
 ./gradlew test jacocoTestReport
 # open build/reports/jacoco/test/html/index.html
 ```
 
 **Test Statistics:**
-- Total Tests: 174 (128 unit + 46 integration)
-- Code Coverage: 94.08%
+- Total Tests: 192 (128 unit + 64 integration)
+- Code Coverage: 94%
 - Test Framework: JUnit 5, Mockito, AssertJ, Testcontainers
+- New: Distributed locking tests (9 unit + concurrency integration tests)
 
 ### Code Formatting
 ```bash
@@ -519,6 +560,32 @@ Use structured logging (JSON format) with fields: `timestamp`, `level`, `logger`
 - GET operations (read-only) do not require authentication
 - Configurable via environment variable (API_KEY)
 - Future enhancement: Spring Security with OAuth2/JWT for production use
+
+### Distributed Locking Strategy
+- **Why Redis locks**: Prevents race conditions in concurrent operations across multiple app instances
+- **Lock granularity**: Game-level (`lock:game:{gameId}`) - chosen because all operations modify the entire game object
+- **Retry mechanism**: Exponential backoff (50ms → 100ms → 200ms) up to 3 attempts
+- **Auto-recovery**: TTL-based expiration (10s) prevents orphan locks if app crashes
+- **Atomic operations**: Lua scripts ensure only lock owner can release
+
+**Trade-offs:**
+- ✅ Pros: Prevents data corruption, simple to reason about, works across multiple instances
+- ❌ Cons: Slight latency increase (~50-200ms on contention), requires Redis availability
+
+**Troubleshooting Locks:**
+```bash
+# View all active locks
+docker exec deck-game-redis redis-cli KEYS "lock:*"
+
+# Check TTL of a specific lock
+docker exec deck-game-redis redis-cli TTL "lock:game:game-123"
+
+# Force release a lock (CAUTION - only in emergencies)
+docker exec deck-game-redis redis-cli DEL "lock:game:game-123"
+
+# Clear all locks (EMERGENCY ONLY)
+docker exec deck-game-redis redis-cli --scan --pattern "lock:*" | xargs redis-cli DEL
+```
 
 ## Reference Documentation
 
