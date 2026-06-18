@@ -2,6 +2,13 @@ app:
   security:
     api-key: test-api-key-12345
 
+  concurrency:
+    lock:
+      timeout-seconds: 60  # Very long timeout for tests
+      retry:
+        max-attempts: 5
+        initial-backoff-ms: 100
+
 spring:
   application:
     name: deck-game-service-test

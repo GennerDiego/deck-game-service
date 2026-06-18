@@ -24,6 +24,7 @@ public class DeckService {
   private final GameRepository gameRepository;
   private final GameService gameService;
   private final ShuffleUtil shuffleUtil;
+  private final DistributedLockService lockService;
 
   /**
    * Create a new deck (standalone, not attached to any game)
@@ -66,13 +67,22 @@ public class DeckService {
    * @throws com.cardgame.exception.GameNotFoundException if game not found
    */
   public void addDeckToGame(String gameId, String deckId) {
-    Game game = gameService.findById(gameId);
-    Deck deck = findById(deckId);
+    String lockKey = "game:" + gameId;
 
-    game.addDeck(deck);
-    gameRepository.save(game);
-    log.info(
-        "Deck {} added to game {}. Total cards: {}", deckId, gameId, game.getGameDeck().size());
+    lockService.executeWithLock(
+        lockKey,
+        () -> {
+          Game game = gameService.findById(gameId);
+          Deck deck = findById(deckId);
+
+          game.addDeck(deck);
+          gameRepository.save(game);
+          log.info(
+              "Deck {} added to game {}. Total cards: {}",
+              deckId,
+              gameId,
+              game.getGameDeck().size());
+        });
   }
 
   /**
@@ -98,16 +108,22 @@ public class DeckService {
   }
 
   public void shuffleGameDeck(String gameId) {
-    Game game = gameService.findById(gameId);
+    String lockKey = "game:" + gameId;
 
-    // Shuffle on empty deck does nothing (doesn't throw exception)
-    if (!game.getGameDeck().isEmpty()) {
-      shuffleUtil.shuffle(game.getGameDeck());
-      gameRepository.save(game);
-      log.info("Game deck shuffled for game: {}", gameId);
-    } else {
-      log.debug("Shuffle called on empty deck for game: {}", gameId);
-    }
+    lockService.executeWithLock(
+        lockKey,
+        () -> {
+          Game game = gameService.findById(gameId);
+
+          // Shuffle on empty deck does nothing (doesn't throw exception)
+          if (!game.getGameDeck().isEmpty()) {
+            shuffleUtil.shuffle(game.getGameDeck());
+            gameRepository.save(game);
+            log.info("Game deck shuffled for game: {}", gameId);
+          } else {
+            log.debug("Shuffle called on empty deck for game: {}", gameId);
+          }
+        });
   }
 
   public Map<String, Integer> getSuitCounts(String gameId) {
